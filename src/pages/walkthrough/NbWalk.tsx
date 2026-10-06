@@ -9,6 +9,7 @@ import { WalkDataPanel, genPts } from '@/pages/walkthrough/walkShared'
 import { nbFit, nbPosterior, gaussPdf, type NbFit } from '@/lib/walkthroughs'
 import { CLASS_COLORS } from '@/lib/cart'
 import type { DTPreset, Pt } from '@/lib/datasets'
+import { DEFAULT_DATA_SEED } from '@/lib/datasets'
 import { Shuffle } from 'lucide-react'
 
 const W = 520
@@ -20,6 +21,7 @@ export default function NbWalk() {
   const [perClass, setPerClass] = useState(60)
   const [noise, setNoise] = useState(4)
   const [points, setPoints] = useState<Pt[]>(() => genPts('linear', 60, 4))
+  const [seed, setSeed] = useState(DEFAULT_DATA_SEED)
 
   // ---- 步进（共 3 步：0=先验 1=拟合曲线 2=待分类点演算） ----
   const [step, setStep] = useState(0)
@@ -38,11 +40,17 @@ export default function NbWalk() {
     [fit, query],
   )
 
-  const regenerate = (p = preset, n = perClass, nz = noise) => {
-    setPoints(genPts(p, n, nz))
+  const regenerate = (p = preset, n = perClass, nz = noise, sd: number = seed) => {
+    setPoints(genPts(p, n, nz, sd))
     setStep(0)
     setPlaying(false)
     setQueryIdx(0)
+  }
+
+  // 换种子：重算数据并沿用既有重置逻辑
+  const changeSeed = (sd: number) => {
+    setSeed(sd)
+    regenerate(preset, perClass, noise, sd)
   }
 
   const shuffleQuery = () => setQueryIdx(Math.floor(Math.random() * points.length))
@@ -120,6 +128,8 @@ export default function NbWalk() {
             </CardHeader>
             <CardContent>
               <WalkDataPanel
+                seed={seed}
+                onSeed={changeSeed}
                 preset={preset}
                 perClass={perClass}
                 noise={noise}

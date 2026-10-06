@@ -1,7 +1,22 @@
 // ============================================================
 // 数据集生成 —— 纯函数库
 // 所有坐标统一落在 [0,100] × [0,100] 的画布坐标系中
+//
+// 【可复现性约定】所有数据集生成函数都接受 seed 参数（默认 DEFAULT_DATA_SEED），
+//   相同 seed + 相同参数 → 逐点完全一致的数据。
+//   这样学生 A 与学生 B 打开同一个实验看到的是同一份数据，
+//   老师课堂演示的结论学生课后能原样复现，实验结果可写进报告。
+//   随机源统一用 classifiers.ts 的 mulberry32（与算法层一致）。
 // ============================================================
+
+import { mulberry32 } from './classifiers'
+
+/** 默认数据集种子。教学场景统一用它，保证全班数据一致 */
+export const DEFAULT_DATA_SEED = 42
+
+// ------------------------------------------------------------
+// 基础类型
+// ------------------------------------------------------------
 
 /** 二维样本点（决策树用，带类别标签） */
 export interface Pt {
@@ -16,22 +31,51 @@ export interface RawPt {
   y: number
 }
 
-/** Box-Muller 生成标准正态分布随机数 */
-export function randn(): number {
-  let u = 0
-  let v = 0
-  while (u === 0) u = Math.random()
-  while (v === 0) v = Math.random()
-  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v)
-}
-
-/** 一维高斯采样 */
-function gauss(mean: number, sd: number): number {
-  return mean + randn() * sd
-}
-
+/** 把数值夹到 [lo, hi] 区间 */
 function clamp(v: number, lo: number, hi: number): number {
   return Math.min(hi, Math.max(lo, v))
+}
+
+// ------------------------------------------------------------
+// 随机数工厂：把 seed 封装成一个确定性的随机器集合
+// ------------------------------------------------------------
+
+/** 带种子的随机器：r() 均匀分布，rn() 标准正态，shuffle() 原地 Fisher-Yates */
+export interface SeededRandom {
+  /** [0,1) 均匀分布 */
+  r: () => number
+  /** 标准正态分布（Box-Muller） */
+  rn: () => number
+  /** Fisher-Yates 原地洗牌 */
+  shuffle: <T>(arr: T[]) => T[]
+}
+
+/** 按 seed 创建确定性随机器。同 seed 必然产生同一序列 */
+export function createRandom(seed: number = DEFAULT_DATA_SEED): SeededRandom {
+  const r = mulberry32(seed)
+  // Box-Muller：缓存第二个值，避免连续调用浪费均匀数
+  let spare: number | null = null
+  const rn = () => {
+    if (spare !== null) {
+      const v = spare
+      spare = null
+      return v
+    }
+    let u = r()
+    while (u === 0) u = r()
+    const v = r()
+    const mag = Math.sqrt(-2 * Math.log(u))
+    spare = mag * Math.sin(2 * Math.PI * v)
+    return mag * Math.cos(2 * Math.PI * v)
+  }
+  const shuffle = <T,>(arr: T[]): T[] => {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(r() * (i + 1))
+      ;[arr[i], arr[j]] = [arr[j], arr[i]]
+    }
+    return arr
+  }
+  return { r, rn, shuffle }
 }
 
 // ------------------------------------------------------------
@@ -42,19 +86,21 @@ export interface Pt1D {
   label: number // 0 = A，1 = B
 }
 
-/** 生成约 n 个一维点：A 类 ~ N(32, 12²)，B 类 ~ N(68, 12²) */
-export function gen1DTwoClass(n = 30): Pt1D[] {
+/**
+ * 生成约 n 个一维点：A 类 ~ N(32, 12²)，B 类 ~ N(68, 12²)
+ * @param n    点数
+ * @param seed 随机种子，默认 DEFAULT_DATA_SEED
+ */
+export function gen1DTwoClass(n = 30, seed: number = DEFAULT_DATA_SEED): Pt1D[] {
+  const rnd = createRandom(seed)
   const pts: Pt1D[] = []
   for (let i = 0; i < n; i++) {
     const label = i % 2 === 0 ? 0 : 1
     const mean = label === 0 ? 32 : 68
-    pts.push({ x: clamp(gauss(mean, 12), 2, 98), label })
+    pts.push({ x: clamp(mean + rnd.rn() * 12, 2, 98), label })
   }
   // 打乱顺序，避免类别交替出现得太规律
-  for (let i = pts.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
-    ;[pts[i], pts[j]] = [pts[j], pts[i]]
-  }
+  rnd.shuffle(pts)
   return pts
 }
 
@@ -74,10 +120,18 @@ export const DT_PRESET_NAMES: Record<DTPreset, string> = {
  * 生成决策树实验数据
  * @param perClass 每类样本数
  * @param noise    噪声强度 0~30（叠加到坐标上的高斯抖动标准差）
+ * @param seed     随机种子，默认 DEFAULT_DATA_SEED
  */
-export function genDTPreset(preset: DTPreset, perClass: number, noise: number): Pt[] {
+export function genDTPreset(
+  preset: DTPreset,
+  perClass: number,
+  noise: number,
+  seed: number = DEFAULT_DATA_SEED,
+): Pt[] {
+  const rnd = createRandom(seed)
   const pts: Pt[] = []
-  const jitter = () => randn() * noise * 0.6
+  const jitter = () => rnd.rn() * noise * 0.6
+  const gauss = (mean: number, sd: number) => mean + rnd.rn() * sd
 
   if (preset === 'linear') {
     // 两个分离的高斯团：A 在左下，B 在右上
@@ -88,17 +142,17 @@ export function genDTPreset(preset: DTPreset, perClass: number, noise: number): 
   } else if (preset === 'circles') {
     // A 在中心圆盘，B 在外圈圆环 —— 考验树用很多刀逼近圆形边界
     for (let i = 0; i < perClass; i++) {
-      const r = Math.sqrt(Math.random()) * 20
-      const a = Math.random() * 2 * Math.PI
+      const r = Math.sqrt(rnd.r()) * 20
+      const a = rnd.r() * 2 * Math.PI
       pts.push({ x: clamp(50 + r * Math.cos(a) + jitter(), 0, 100), y: clamp(50 + r * Math.sin(a) + jitter(), 0, 100), label: 0 })
-      const r2 = 32 + Math.random() * 12
-      const a2 = Math.random() * 2 * Math.PI
+      const r2 = 32 + rnd.r() * 12
+      const a2 = rnd.r() * 2 * Math.PI
       pts.push({ x: clamp(50 + r2 * Math.cos(a2) + jitter(), 0, 100), y: clamp(50 + r2 * Math.sin(a2) + jitter(), 0, 100), label: 1 })
     }
   } else if (preset === 'moons') {
     // 经典双月牙：上下两条交错的半圆弧
     for (let i = 0; i < perClass; i++) {
-      const a = Math.random() * Math.PI // 0~π
+      const a = rnd.r() * Math.PI // 0~π
       // 上月牙（A 类）
       pts.push({
         x: clamp(50 + 32 * Math.cos(a) + jitter(), 0, 100),
@@ -106,7 +160,7 @@ export function genDTPreset(preset: DTPreset, perClass: number, noise: number): 
         label: 0,
       })
       // 下月牙（B 类），翻转并错位
-      const a2 = Math.random() * Math.PI
+      const a2 = rnd.r() * Math.PI
       pts.push({
         x: clamp(50 + 32 * (1 - Math.cos(a2)) - 32 + jitter(), 0, 100),
         y: clamp(62 - 26 * Math.sin(a2) + jitter(), 0, 100),
@@ -147,10 +201,18 @@ export const KM_PRESET_NAMES: Record<KMPreset, string> = {
  * 生成 K-Means 实验数据
  * @param perGroup 每个团簇/结构大约的点数
  * @param noise    噪声强度 0~30
+ * @param seed     随机种子，默认 DEFAULT_DATA_SEED
  */
-export function genKMPreset(preset: KMPreset, perGroup: number, noise: number): RawPt[] {
+export function genKMPreset(
+  preset: KMPreset,
+  perGroup: number,
+  noise: number,
+  seed: number = DEFAULT_DATA_SEED,
+): RawPt[] {
+  const rnd = createRandom(seed)
   const pts: RawPt[] = []
-  const jitter = () => randn() * noise * 0.5
+  const jitter = () => rnd.rn() * noise * 0.5
+  const gauss = (mean: number, sd: number) => mean + rnd.rn() * sd
 
   if (preset === 'blobs') {
     // 三个球形团簇 —— K-Means 的主场
@@ -171,16 +233,16 @@ export function genKMPreset(preset: KMPreset, perGroup: number, noise: number): 
     }
     const ringN = perGroup * 2
     for (let i = 0; i < ringN; i++) {
-      const a = (i / ringN) * 2 * Math.PI + Math.random() * 0.1
-      const r = 32 + randn() * 2.5
+      const a = (i / ringN) * 2 * Math.PI + rnd.r() * 0.1
+      const r = 32 + rnd.rn() * 2.5
       pts.push({ x: clamp(50 + r * Math.cos(a) + jitter(), 0, 100), y: clamp(50 + r * Math.sin(a) + jitter(), 0, 100) })
     }
   } else if (preset === 'moons') {
     // 两条弯月弧 —— 细长弯曲的簇，K-Means 容易从中间劈开
     for (let i = 0; i < perGroup; i++) {
-      const a = Math.random() * Math.PI
+      const a = rnd.r() * Math.PI
       pts.push({ x: clamp(50 + 32 * Math.cos(a) + jitter(), 0, 100), y: clamp(40 + 26 * Math.sin(a) + jitter(), 0, 100) })
-      const a2 = Math.random() * Math.PI
+      const a2 = rnd.r() * Math.PI
       pts.push({ x: clamp(50 + 32 * (1 - Math.cos(a2)) - 32 + jitter(), 0, 100), y: clamp(60 - 26 * Math.sin(a2) + jitter(), 0, 100) })
     }
   } else {
@@ -188,7 +250,7 @@ export function genKMPreset(preset: KMPreset, perGroup: number, noise: number): 
     const faceN = Math.max(8, Math.floor(perGroup * 0.55))
     for (let i = 0; i < faceN; i++) {
       const a = (i / faceN) * 2 * Math.PI
-      pts.push({ x: clamp(50 + 34 * Math.cos(a) + randn() * 1.5 + jitter(), 0, 100), y: clamp(50 + 34 * Math.sin(a) + randn() * 1.5 + jitter(), 0, 100) })
+      pts.push({ x: clamp(50 + 34 * Math.cos(a) + rnd.rn() * 1.5 + jitter(), 0, 100), y: clamp(50 + 34 * Math.sin(a) + rnd.rn() * 1.5 + jitter(), 0, 100) })
     }
     const eyeN = Math.max(4, Math.floor(perGroup * 0.12))
     for (const ex of [36, 64]) {
@@ -199,7 +261,7 @@ export function genKMPreset(preset: KMPreset, perGroup: number, noise: number): 
     const mouthN = Math.max(6, Math.floor(perGroup * 0.2))
     for (let i = 0; i < mouthN; i++) {
       const a = Math.PI * (0.15 + 0.7 * (i / mouthN))
-      pts.push({ x: clamp(50 + 20 * Math.cos(a) + randn() * 1.5 + jitter(), 0, 100), y: clamp(52 + 16 * Math.sin(a) + randn() * 1.5 + jitter(), 0, 100) })
+      pts.push({ x: clamp(50 + 20 * Math.cos(a) + rnd.rn() * 1.5 + jitter(), 0, 100), y: clamp(52 + 16 * Math.sin(a) + rnd.rn() * 1.5 + jitter(), 0, 100) })
     }
   }
   return pts
@@ -236,19 +298,15 @@ export const CASE_META: Record<CaseId, { name: string; desc: string }> = {
   },
 }
 
-/** 生成内置案例数据集（约 300 行，固定种子可复现） */
-export function genCaseDataset(id: CaseId): CaseDataset {
-  let seed = id === 'churn' ? 2024 : id === 'credit' ? 2025 : 2026
-  const rand = () => {
-    seed = (seed * 1103515245 + 12345) % 2147483648
-    return seed / 2147483648
-  }
-  const gauss = (mean: number, sd: number) => {
-    // Box-Muller（局部实现，避免与全局 randn 的不可复现性冲突）
-    const u = Math.max(rand(), 1e-9)
-    const v = Math.max(rand(), 1e-9)
-    return mean + Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v) * sd
-  }
+/**
+ * 生成内置案例数据集（约 300 行）
+ * 每个案例有独立固定种子，天然可复现；seed 参数仅供需要变体时使用。
+ */
+export function genCaseDataset(id: CaseId, seed?: number): CaseDataset {
+  // 案例默认种子由 id 决定，保证同一案例永远是同一份数据
+  const baseSeed = seed ?? (id === 'churn' ? 2024 : id === 'credit' ? 2025 : 2026)
+  const rnd = createRandom(baseSeed)
+  const gauss = (mean: number, sd: number) => mean + rnd.rn() * sd
 
   const X: number[][] = []
   const y: number[] = []
@@ -294,10 +352,7 @@ export function genCaseDataset(id: CaseId): CaseDataset {
 
   // 打乱行序
   const order = X.map((_, i) => i)
-  for (let i = order.length - 1; i > 0; i--) {
-    const j = Math.floor(rand() * (i + 1))
-    ;[order[i], order[j]] = [order[j], order[i]]
-  }
+  rnd.shuffle(order)
   return {
     id,
     name: CASE_META[id].name,

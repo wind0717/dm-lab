@@ -10,6 +10,7 @@ import { WalkDataPanel, genPts } from '@/pages/walkthrough/walkShared'
 import { knnNeighbors, knnVotes, knnPredict } from '@/lib/walkthroughs'
 import { CLASS_COLORS, CLASS_BG } from '@/lib/cart'
 import type { DTPreset, Pt } from '@/lib/datasets'
+import { DEFAULT_DATA_SEED } from '@/lib/datasets'
 
 const W = 520
 const H = 420
@@ -22,6 +23,7 @@ export default function KnnWalk() {
   const [perClass, setPerClass] = useState(50)
   const [noise, setNoise] = useState(6)
   const [points, setPoints] = useState<Pt[]>(() => genPts('moons', 50, 6))
+  const [seed, setSeed] = useState(DEFAULT_DATA_SEED)
 
   // ---- 交互 ----
   const [k, setK] = useState(5)
@@ -52,7 +54,12 @@ export default function KnnWalk() {
     return cells
   }, [showRegion, X, y, k, points.length])
 
-  const regenerate = (p = preset, n = perClass, nz = noise) => setPoints(genPts(p, n, nz))
+  const regenerate = (p = preset, n = perClass, nz = noise, sd: number = seed) => setPoints(genPts(p, n, nz, sd))
+
+  const changeSeed = (sd: number) => {
+    setSeed(sd)
+    setPoints(genPts(preset, perClass, noise, sd))
+  }
 
   const xPx = (x: number) => (x / 100) * W
   const yPx = (yy: number) => H - (yy / 100) * H
@@ -184,6 +191,8 @@ export default function KnnWalk() {
             </CardHeader>
             <CardContent>
               <WalkDataPanel
+                seed={seed}
+                onSeed={changeSeed}
                 preset={preset}
                 perClass={perClass}
                 noise={noise}

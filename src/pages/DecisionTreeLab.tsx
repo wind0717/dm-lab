@@ -18,7 +18,8 @@ import {
   type Criterion,
   type TrainedTree,
 } from '@/lib/cart'
-import { genDTPreset, DT_PRESET_NAMES, type DTPreset, type Pt } from '@/lib/datasets'
+import { genDTPreset, DT_PRESET_NAMES, DEFAULT_DATA_SEED, type DTPreset, type Pt } from '@/lib/datasets'
+import SeedControl from '@/components/SeedControl'
 import { ChevronLeft, ChevronRight, Play, Pause, RotateCcw, MousePointerClick, ArrowRight } from 'lucide-react'
 import type { PageId } from '@/App'
 
@@ -33,6 +34,7 @@ export default function DecisionTreeLab({ onNavigate }: { onNavigate?: (p: PageI
   const [perClass, setPerClass] = useState(60)
   const [noise, setNoise] = useState(6)
   const [points, setPoints] = useState<Pt[]>(() => genDTPreset('linear', 60, 6))
+  const [seed, setSeed] = useState(DEFAULT_DATA_SEED)
   const [addClass, setAddClass] = useState<-1 | 0 | 1>(-1) // -1 关闭点击添加
 
   // ---- 算法配置 ----
@@ -91,8 +93,16 @@ export default function DecisionTreeLab({ onNavigate }: { onNavigate?: (p: PageI
   // 当前正在展开的节点（第 curStep 步展开的是 expandOrder === curStep-1）
   const currentNode = curStep > 0 ? trained?.internalNodes[curStep - 1] : undefined
 
-  const regenerate = (p: DTPreset = preset, n: number = perClass, nz: number = noise) => {
-    setPoints(genDTPreset(p, n, nz))
+  const regenerate = (p: DTPreset = preset, n: number = perClass, nz: number = noise, sd: number = seed) => {
+    setPoints(genDTPreset(p, n, nz, sd))
+    setStep(0)
+    setPlaying(false)
+  }
+
+  // 改种子时按新种子重算数据，保证「改什么就立刻看到什么」
+  const changeSeed = (sd: number) => {
+    setSeed(sd)
+    setPoints(genDTPreset(preset, perClass, noise, sd))
     setStep(0)
     setPlaying(false)
   }
@@ -279,6 +289,7 @@ export default function DecisionTreeLab({ onNavigate }: { onNavigate?: (p: PageI
               </div>
               <SliderRow label="每类样本数" value={perClass} min={20} max={200} step={10} onChange={setPerClass} />
               <SliderRow label="噪声强度" value={noise} min={0} max={30} step={1} onChange={setNoise} />
+              <SeedControl seed={seed} onChange={changeSeed} onReroll={() => changeSeed(seed + 1)} className="mt-1" />
               <div className="flex gap-2">
                 <Button size="sm" variant="outline" onClick={() => regenerate()}>
                   按当前设置生成

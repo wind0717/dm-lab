@@ -12,6 +12,7 @@ import { WalkDataPanel, genPts } from '@/pages/walkthrough/walkShared'
 import { xgbWalkthrough, xgbProba } from '@/lib/walkthroughs2'
 import { CLASS_COLORS } from '@/lib/cart'
 import type { DTPreset, Pt } from '@/lib/datasets'
+import { DEFAULT_DATA_SEED } from '@/lib/datasets'
 
 const W = 520
 const H = 420
@@ -24,6 +25,7 @@ export default function XgbWalk() {
   const [perClass, setPerClass] = useState(60)
   const [noise, setNoise] = useState(6)
   const [points, setPoints] = useState<Pt[]>(() => genPts('linear', 60, 6))
+  const [seed, setSeed] = useState(DEFAULT_DATA_SEED)
   const [eta, setEta] = useState(0.3)
   const [rounds, setRounds] = useState(30)
 
@@ -62,10 +64,16 @@ export default function XgbWalk() {
     return cells
   }, [walk, curStep, showFirst])
 
-  const regenerate = (p = preset, n = perClass, nz = noise) => {
-    setPoints(genPts(p, n, nz))
+  const regenerate = (p = preset, n = perClass, nz = noise, sd: number = seed) => {
+    setPoints(genPts(p, n, nz, sd))
     setStep(0)
     setPlaying(false)
+  }
+
+  // 换种子：重算数据并沿用既有重置逻辑
+  const changeSeed = (sd: number) => {
+    setSeed(sd)
+    regenerate(preset, perClass, noise, sd)
   }
 
   const xPx = (x: number) => (x / 100) * W
@@ -197,6 +205,8 @@ export default function XgbWalk() {
             </CardHeader>
             <CardContent>
               <WalkDataPanel
+                seed={seed}
+                onSeed={changeSeed}
                 preset={preset}
                 perClass={perClass}
                 noise={noise}

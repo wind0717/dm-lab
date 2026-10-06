@@ -13,6 +13,7 @@ import { ClusterWalkDataPanel, genClusterPts } from '@/pages/cluster/clusterShar
 import { createDbscan, dbscanStep, type DbscanState } from '@/lib/dbscan'
 import { CLUSTER_COLORS } from '@/lib/kmeans'
 import type { KMPreset, RawPt } from '@/lib/datasets'
+import { DEFAULT_DATA_SEED } from '@/lib/datasets'
 import { Zap } from 'lucide-react'
 
 const W = 520
@@ -58,6 +59,7 @@ export default function DbscanWalk() {
   const [perGroup, setPerGroup] = useState(60)
   const [noise, setNoise] = useState(2)
   const [points, setPoints] = useState<RawPt[]>(() => genClusterPts('rings', 60, 2))
+  const [seed, setSeed] = useState(DEFAULT_DATA_SEED)
 
   // ---- 参数 ----
   const [eps, setEps] = useState(7)
@@ -94,8 +96,14 @@ export default function DbscanWalk() {
     setPlaying(false)
   }, [steps])
 
-  const regenerate = (p = preset, n = perGroup, nz = noise) => {
-    setPoints(genClusterPts(p, n, nz))
+  const regenerate = (p = preset, n = perGroup, nz = noise, sd: number = seed) => {
+    setPoints(genClusterPts(p, n, nz, sd))
+  }
+
+  // 换种子：重算数据并沿用既有重置逻辑
+  const changeSeed = (sd: number) => {
+    setSeed(sd)
+    regenerate(preset, perGroup, noise, sd)
   }
 
   const done = cur.done
@@ -232,6 +240,8 @@ export default function DbscanWalk() {
             </CardHeader>
             <CardContent>
               <ClusterWalkDataPanel
+                seed={seed}
+                onSeed={changeSeed}
                 preset={preset}
                 perGroup={perGroup}
                 noise={noise}

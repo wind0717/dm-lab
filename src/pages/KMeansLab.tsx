@@ -8,7 +8,8 @@ import ThinkBox from '@/components/ThinkBox'
 import CurveChart from '@/components/CurveChart'
 import { MethodIntroCard } from '@/components/MethodIntro'
 import { assignPoints, updateCentroids, randomCentroids, maxShift, CLUSTER_COLORS, type Centroid } from '@/lib/kmeans'
-import { genKMPreset, KM_PRESET_NAMES, type KMPreset, type RawPt } from '@/lib/datasets'
+import { genKMPreset, KM_PRESET_NAMES, DEFAULT_DATA_SEED, type KMPreset, type RawPt } from '@/lib/datasets'
+import SeedControl from '@/components/SeedControl'
 import ClusterEvalPanel from '@/components/ClusterEvalPanel'
 import { Crosshair, Dices, Play, Pause, RotateCcw, MousePointerClick } from 'lucide-react'
 
@@ -22,6 +23,7 @@ export default function KMeansLab() {
   const [perGroup, setPerGroup] = useState(50)
   const [noise, setNoise] = useState(4)
   const [points, setPoints] = useState<RawPt[]>(() => genKMPreset('blobs', 50, 4))
+  const [seed, setSeed] = useState(DEFAULT_DATA_SEED)
   const [addPointMode, setAddPointMode] = useState(false)
 
   // ---- K-Means 状态 ----
@@ -47,8 +49,16 @@ export default function KMeansLab() {
     setRunning(false)
   }
 
-  const regenerate = (p: KMPreset = preset, n: number = perGroup, nz: number = noise) => {
-    setPoints(genKMPreset(p, n, nz))
+  const regenerate = (p: KMPreset = preset, n: number = perGroup, nz: number = noise, sd: number = seed) => {
+    setPoints(genKMPreset(p, n, nz, sd))
+    setCentroids([])
+    resetRun()
+  }
+
+  // 改种子时按新种子重算数据
+  const changeSeed = (sd: number) => {
+    setSeed(sd)
+    setPoints(genKMPreset(preset, perGroup, noise, sd))
     setCentroids([])
     resetRun()
   }
@@ -330,6 +340,7 @@ export default function KMeansLab() {
               </div>
               <SliderRow label="每组点数" value={perGroup} min={20} max={100} step={5} onChange={setPerGroup} />
               <SliderRow label="噪声强度" value={noise} min={0} max={30} step={1} onChange={setNoise} />
+              <SeedControl seed={seed} onChange={changeSeed} onReroll={() => changeSeed(seed + 1)} className="mt-1" />
               <div className="flex gap-2">
                 <Button size="sm" variant="outline" onClick={() => regenerate()}>
                   按当前设置生成

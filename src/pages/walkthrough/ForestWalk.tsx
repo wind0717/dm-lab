@@ -13,6 +13,7 @@ import { forestWalkthrough, forestVote } from '@/lib/walkthroughs2'
 import { treePredictG, type TreeNodeG } from '@/lib/classifiers'
 import { CLASS_COLORS, CLASS_BG } from '@/lib/cart'
 import type { DTPreset, Pt } from '@/lib/datasets'
+import { DEFAULT_DATA_SEED } from '@/lib/datasets'
 
 const N_TREES = 9
 
@@ -33,6 +34,7 @@ export default function ForestWalk() {
   const [perClass, setPerClass] = useState(60)
   const [noise, setNoise] = useState(6)
   const [points, setPoints] = useState<Pt[]>(() => genPts('moons', 60, 6))
+  const [seed, setSeed] = useState(DEFAULT_DATA_SEED)
   const [maxDepth, setMaxDepth] = useState(4)
 
   // ---- 步进 ----
@@ -57,10 +59,16 @@ export default function ForestWalk() {
 
   // 测试集下标（在原 points 中的位置无法直接对应，这里直接用坐标判断训练/测试由 walk 内部完成；
   // 大图画布统一画全部点即可）
-  const regenerate = (p = preset, n = perClass, nz = noise) => {
-    setPoints(genPts(p, n, nz))
+  const regenerate = (p = preset, n = perClass, nz = noise, sd: number = seed) => {
+    setPoints(genPts(p, n, nz, sd))
     setStep(0)
     setPlaying(false)
+  }
+
+  // 换种子：重算数据并沿用既有重置逻辑
+  const changeSeed = (sd: number) => {
+    setSeed(sd)
+    regenerate(preset, perClass, noise, sd)
   }
 
   const xPx = (x: number) => (x / 100) * W
@@ -187,6 +195,8 @@ export default function ForestWalk() {
             </CardHeader>
             <CardContent>
               <WalkDataPanel
+                seed={seed}
+                onSeed={changeSeed}
                 preset={preset}
                 perClass={perClass}
                 noise={noise}

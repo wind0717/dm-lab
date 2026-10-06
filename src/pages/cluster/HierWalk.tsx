@@ -13,6 +13,7 @@ import { ClusterWalkDataPanel, genClusterPts } from '@/pages/cluster/clusterShar
 import { agglomerative, cutTree, labelsAfterMerges, LINKAGE_NAMES, type HcResult, type Linkage } from '@/lib/hierarchical'
 import { CLUSTER_COLORS } from '@/lib/kmeans'
 import type { KMPreset, RawPt } from '@/lib/datasets'
+import { DEFAULT_DATA_SEED } from '@/lib/datasets'
 import { Scissors, Zap } from 'lucide-react'
 
 const W = 520
@@ -35,6 +36,7 @@ export default function HierWalk() {
   const [perGroup, setPerGroup] = useState(25)
   const [noise, setNoise] = useState(4)
   const [points, setPoints] = useState<RawPt[]>(() => genClusterPts('blobs', 25, 4))
+  const [seed, setSeed] = useState(DEFAULT_DATA_SEED)
 
   // ---- 参数 ----
   const [linkage, setLinkage] = useState<Linkage>('average')
@@ -85,8 +87,14 @@ export default function HierWalk() {
     return `合并完成 ✓ ${hier.n} 个点全部连成一棵大树。拖动下方"切一刀"滑块：在树状图的某一高度横切，切到几根树枝就是几类。`
   }, [curStep, done, totalSteps, hier, lastMerge])
 
-  const regenerate = (p = preset, n = perGroup, nz = noise) => {
-    setPoints(genClusterPts(p, n, nz))
+  const regenerate = (p = preset, n = perGroup, nz = noise, sd: number = seed) => {
+    setPoints(genClusterPts(p, n, nz, sd))
+  }
+
+  // 换种子：重算数据并沿用既有重置逻辑
+  const changeSeed = (sd: number) => {
+    setSeed(sd)
+    regenerate(preset, perGroup, noise, sd)
   }
 
   const xPx = (x: number) => (x / 100) * W
@@ -221,6 +229,8 @@ export default function HierWalk() {
             </CardHeader>
             <CardContent>
               <ClusterWalkDataPanel
+                seed={seed}
+                onSeed={changeSeed}
                 preset={preset}
                 perGroup={perGroup}
                 noise={noise}

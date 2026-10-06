@@ -11,6 +11,7 @@ import { WalkDataPanel, genPts } from '@/pages/walkthrough/walkShared'
 import { logisticWalkthrough } from '@/lib/walkthroughs'
 import { CLASS_COLORS } from '@/lib/cart'
 import type { DTPreset, Pt } from '@/lib/datasets'
+import { DEFAULT_DATA_SEED } from '@/lib/datasets'
 
 const W = 520
 const H = 420
@@ -27,6 +28,7 @@ export default function LogisticWalk() {
   const [perClass, setPerClass] = useState(60)
   const [noise, setNoise] = useState(6)
   const [points, setPoints] = useState<Pt[]>(() => genPts('linear', 60, 6))
+  const [seed, setSeed] = useState(DEFAULT_DATA_SEED)
   const [lr, setLr] = useState(0.5)
 
   // ---- 步进 ----
@@ -91,10 +93,16 @@ export default function LogisticWalk() {
     return { x1: pts[0][0], y1: pts[0][1], x2: pts[1][0], y2: pts[1][1] }
   }, [walk, cur])
 
-  const regenerate = (p = preset, n = perClass, nz = noise) => {
-    setPoints(genPts(p, n, nz))
+  const regenerate = (p = preset, n = perClass, nz = noise, sd: number = seed) => {
+    setPoints(genPts(p, n, nz, sd))
     setStep(0)
     setPlaying(false)
+  }
+
+  // 换种子：重算数据并沿用既有重置逻辑
+  const changeSeed = (sd: number) => {
+    setSeed(sd)
+    regenerate(preset, perClass, noise, sd)
   }
 
   const xPx = (x: number) => (x / 100) * W
@@ -200,6 +208,8 @@ export default function LogisticWalk() {
             </CardHeader>
             <CardContent>
               <WalkDataPanel
+                seed={seed}
+                onSeed={changeSeed}
                 preset={preset}
                 perClass={perClass}
                 noise={noise}

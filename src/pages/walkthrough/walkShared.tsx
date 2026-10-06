@@ -1,20 +1,34 @@
-// 三个推演页共用的 2D 数据集选择面板：预设按钮 + 样本数/噪声滑块 + 生成
+// 三个推演页共用的 2D 数据集选择面板：预设按钮 + 样本数/噪声滑块 + 随机种子 + 生成
 import { Button } from '@/components/ui/button'
 import SliderRow from '@/components/SliderRow'
+import SeedControl from '@/components/SeedControl'
 import { genDTPreset, DT_PRESET_NAMES, type DTPreset, type Pt } from '@/lib/datasets'
 
 interface Props {
   preset: DTPreset
   perClass: number
   noise: number
+  seed: number
   onPreset: (p: DTPreset) => void
   onPerClass: (n: number) => void
   onNoise: (n: number) => void
+  onSeed: (n: number) => void
   onRegen: () => void
   hint?: string
 }
 
-export function WalkDataPanel({ preset, perClass, noise, onPreset, onPerClass, onNoise, onRegen, hint }: Props) {
+export function WalkDataPanel({
+  preset,
+  perClass,
+  noise,
+  seed,
+  onPreset,
+  onPerClass,
+  onNoise,
+  onSeed,
+  onRegen,
+  hint,
+}: Props) {
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap gap-1.5">
@@ -32,6 +46,7 @@ export function WalkDataPanel({ preset, perClass, noise, onPreset, onPerClass, o
       </div>
       <SliderRow label="每类样本数" value={perClass} min={20} max={120} step={10} onChange={onPerClass} />
       <SliderRow label="噪声强度" value={noise} min={0} max={30} step={1} onChange={onNoise} />
+      <SeedControl seed={seed} onChange={onSeed} onReroll={() => onSeed(seed + 1)} />
       <div className="flex items-center gap-2">
         <Button size="sm" variant="outline" onClick={onRegen}>
           按当前设置生成
@@ -42,6 +57,6 @@ export function WalkDataPanel({ preset, perClass, noise, onPreset, onPerClass, o
   )
 }
 
-export function genPts(preset: DTPreset, perClass: number, noise: number): Pt[] {
-  return genDTPreset(preset, perClass, noise)
+export function genPts(preset: DTPreset, perClass: number, noise: number, seed?: number): Pt[] {
+  return seed === undefined ? genDTPreset(preset, perClass, noise) : genDTPreset(preset, perClass, noise, seed)
 }
