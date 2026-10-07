@@ -1,6 +1,6 @@
 // 逻辑回归逐步推演：每一步 = 一次梯度下降迭代
 // 画布：散点 + 当前决策边界 + 概率渐变背景；右侧：w₁/w₂/b/损失；下方：损失曲线
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import SliderRow from '@/components/SliderRow'
 import ThinkBox from '@/components/ThinkBox'
@@ -42,10 +42,6 @@ export default function LogisticWalk() {
   const walk = useMemo(() => (points.length >= 10 ? logisticWalkthrough(X, y, lr, 200) : null), [X, y, lr, points.length])
   const totalSteps = walk ? walk.steps.length - 1 : 0
   const curStep = Math.min(step, totalSteps)
-
-  useEffect(() => {
-    if (step > totalSteps) setStep(totalSteps)
-  }, [totalSteps, step])
 
   const cur = walk?.steps[curStep]
 

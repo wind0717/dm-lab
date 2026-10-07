@@ -208,7 +208,9 @@ export default function NbWalk() {
                       P({name[0]}) = {prior.toFixed(3)}
                     </p>
                     <p>
-                      P(x₁|{name[0]}) = {pdf[0].toFixed(4)}　P(x₂|{name[0]}) = {pdf[1].toFixed(4)}
+                      P(x₁|{name[0]}) = {pdf[0].toFixed(4)}
+                      <span className="mx-3 inline-block" />
+                      P(x₂|{name[0]}) = {pdf[1].toFixed(4)}
                     </p>
                     <p>
                       分子 = {prior.toFixed(3)} × {pdf[0].toFixed(4)} × {pdf[1].toFixed(4)} = <b>{num.toExponential(3)}</b>

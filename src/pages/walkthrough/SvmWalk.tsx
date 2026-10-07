@@ -1,7 +1,7 @@
 // SVM 逐步推演：每一步 = 一次 Pegasos 次梯度迭代
 // 画布：散点 + 间隔带底色 + 决策边界实线 + 两侧间隔虚线 + "正在起作用的点"高亮
 // 收敛后：支持向量用大圆圈标出，配讲解卡
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import SliderRow from '@/components/SliderRow'
 import ThinkBox from '@/components/ThinkBox'
@@ -69,10 +69,6 @@ export default function SvmWalk() {
   const walk = useMemo(() => (points.length >= 10 ? svmWalkthrough(X, y, C, 0.05, 240) : null), [X, y, C, points.length])
   const totalSteps = walk ? walk.steps.length - 1 : 0
   const curStep = Math.min(step, totalSteps)
-
-  useEffect(() => {
-    if (step > totalSteps) setStep(totalSteps)
-  }, [totalSteps, step])
 
   const cur = walk?.steps[curStep]
   const done = curStep >= totalSteps && totalSteps > 0

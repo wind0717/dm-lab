@@ -1,6 +1,6 @@
 // 层次聚类（凝聚式）逐步推演：每一步 = 合并距离最近的两簇
 // 画布合并闪烁 + 树状图同步生长；完成后"切一刀"高度滑块实时决定簇数
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import SliderRow from '@/components/SliderRow'
@@ -55,20 +55,17 @@ export default function HierWalk() {
   const curStep = Math.min(step, totalSteps)
   const done = totalSteps > 0 && curStep >= totalSteps
 
-  // 数据/linkage 变化 → 回到第 0 步
-  useEffect(() => {
-    setStep(0)
-    setPlaying(false)
-    setCutHeight(0)
-    setCutTouched(false)
-  }, [hier])
+  /**
+   * 切割高度：用户没手动拖过时，完成后自动建议一个「切成 3 簇」的高度。
+   * 原本用 effect + setState 实现，但那是把派生值写回state，
+   * 会多触发一轮渲染；直接算成派生值更准（用户拖过就以用户值为准）。
+   */
+  const suggestedCut = useMemo(
+    () => (done && !cutTouched ? heightForK(hier, 3) : cutHeight),
+    [done, cutTouched, hier, cutHeight],
+  )
 
-  // 完成后自动建议一个切割高度（切成 3 簇）
-  useEffect(() => {
-    if (done && !cutTouched) setCutHeight(heightForK(hier, 3))
-  }, [done, cutTouched, hier])
-
-  const cut = useMemo(() => (done ? cutTree(hier, cutHeight) : null), [done, hier, cutHeight])
+  const cut = useMemo(() => (done ? cutTree(hier, suggestedCut) : null), [done, hier, suggestedCut])
   const animLabels = useMemo(() => (!done && totalSteps > 0 ? labelsAfterMerges(hier, curStep) : null), [done, totalSteps, hier, curStep])
 
   const lastMerge = curStep > 0 && curStep <= totalSteps ? hier.merges[curStep - 1] : null
@@ -89,6 +86,11 @@ export default function HierWalk() {
 
   const regenerate = (p = preset, n = perGroup, nz = noise, sd: number = seed) => {
     setPoints(genClusterPts(p, n, nz, sd))
+    // 换数据即回到初始状态（原先放在 effect 里，会多触发一轮渲染）
+    setStep(0)
+    setPlaying(false)
+    setCutHeight(0)
+    setCutTouched(false)
   }
 
   // 换种子：重算数据并沿用既有重置逻辑
@@ -180,12 +182,12 @@ export default function HierWalk() {
               </p>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Dendrogram result={hier} step={curStep} cutHeight={cutHeight} cutLabels={done ? cut?.labels ?? null : null} width={520} height={260} />
+              <Dendrogram result={hier} step={curStep} cutHeight={suggestedCut} cutLabels={done ? cut?.labels ?? null : null} width={520} height={260} />
               {done && (
                 <div className="space-y-3" data-testid="hier-cut-panel">
                   <SliderRow
                     label={`切一刀的高度（当前切成 ${cut?.k ?? 0} 个簇）`}
-                    value={cutHeight}
+                    value={suggestedCut}
                     min={0}
                     max={Math.max(1, Math.ceil(hier.maxDist))}
                     step={0.5}

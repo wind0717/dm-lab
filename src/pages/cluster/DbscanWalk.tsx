@@ -1,7 +1,7 @@
 // DBSCAN 逐步推演：每一步 = 处理一个点（新检查 / 扩散队列）
 // 画布：ε 虚线圈 + 核心/边界/噪声三样式 + 扩散队列与邻居高亮（沿用工作台视觉）
 // 重点：每步大白话解说条 + 结束态统计卡 + 评估面板
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import SliderRow from '@/components/SliderRow'
@@ -90,14 +90,11 @@ export default function DbscanWalk() {
   const curStep = Math.min(step, totalSteps)
   const cur = steps[curStep]
 
-  // 数据/参数变化 → 回到第 0 步
-  useEffect(() => {
-    setStep(0)
-    setPlaying(false)
-  }, [steps])
-
   const regenerate = (p = preset, n = perGroup, nz = noise, sd: number = seed) => {
     setPoints(genClusterPts(p, n, nz, sd))
+    // 换数据即回到第 0 步（原先放在 effect 里，会多触发一轮渲染）
+    setStep(0)
+    setPlaying(false)
   }
 
   // 换种子：重算数据并沿用既有重置逻辑

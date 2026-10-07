@@ -57,15 +57,13 @@ export default function DecisionTreeLab({ onNavigate }: { onNavigate?: (p: PageI
   const totalSteps = trained?.internalNodes.length ?? 0
   const curStep = Math.min(step, totalSteps)
 
-  // 数据/配置变化后步数可能超界，收敛一下
-  useEffect(() => {
-    if (step > totalSteps) setStep(totalSteps)
-  }, [totalSteps, step])
-
   // 自动播放
   useEffect(() => {
     if (!playing) return
     if (curStep >= totalSteps) {
+    // 自动播放到末尾就该停：这是对定时器这一外部系统的同步，
+    // 属于 useEffect 的正当用途（不是把 props 同步成 state）。
+    // eslint-disable-next-line react-hooks/set-state-in-effect
       setPlaying(false)
       return
     }

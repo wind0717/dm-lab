@@ -1,7 +1,7 @@
 // 随机森林逐步推演：第 k 步 = 训练第 k 棵树（bootstrap 抽样 + 节点级特征子集）
 // 左侧：3×3 小图网格（每棵树自己的决策边界，各不相同 = 多样性）
 //      + 大图（已训练树的多数投票决策区域）+ 准确率随树数曲线
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import SliderRow from '@/components/SliderRow'
 import ThinkBox from '@/components/ThinkBox'
@@ -48,10 +48,6 @@ export default function ForestWalk() {
   const walk = useMemo(() => (points.length >= 10 ? forestWalkthrough(X, y, N_TREES, maxDepth, 13) : null), [X, y, maxDepth, points.length])
   const totalSteps = walk ? walk.trees.length : 0
   const curStep = Math.min(step, totalSteps) // 已训练的树数
-
-  useEffect(() => {
-    if (step > totalSteps) setStep(totalSteps)
-  }, [totalSteps, step])
 
   const done = curStep >= totalSteps && totalSteps > 0
   const trainedTrees = useMemo(() => walk?.trees.slice(0, curStep).map((t) => t.tree) ?? [], [walk, curStep])

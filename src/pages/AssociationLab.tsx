@@ -26,13 +26,16 @@ const LATTICE_ITEMS = ['牛奶', '面包', '啤酒', '尿布']
 
 export default function AssociationLab() {
   // ---- 数据 ----
-  const [transactions, setTransactions] = useState<Transaction[]>(() => genCampusBasket(200, 42))
+  // 动画进度依赖 transactions / minSupport，任何一项变化都要从头播。
+  // 原先放在 useEffect 里监听，但那样会先渲染一帧旧进度再纠正（肉眼可见闪一下），
+  // 改为在数据变更入口就重置。React 18+ 的推荐做法。
+  const [rawTx, setRawTx] = useState<Transaction[]>(() => genCampusBasket(200, 42))
   const [dataTab, setDataTab] = useState<'builtin' | 'editor' | 'csv'>('builtin')
   const [csvError, setCsvError] = useState<string | null>(null)
   const [csvName, setCsvName] = useState('')
 
   // ---- Apriori 动画 ----
-  const [minSupport, setMinSupport] = useState(0.15)
+  const [rawSupport, setRawSupport] = useState(0.15)
   const [stepIdx, setStepIdx] = useState(-1) // -1 未开始；每层 2 步：计数 / 剪枝
   const [auto, setAuto] = useState(false)
 
@@ -42,6 +45,28 @@ export default function AssociationLab() {
   const [sortDesc, setSortDesc] = useState(true)
   const [highlightKey, setHighlightKey] = useState<string | null>(null)
 
+  /** 动画归零：换数据或换阈值时调用 */
+  const resetAnim = () => {
+    setStepIdx(-1)
+    setAuto(false)
+    setHighlightKey(null)
+  }
+
+  /** 写数据即重置动画 */
+  function setTransactions(next: Transaction[] | ((prev: Transaction[]) => Transaction[])) {
+    setRawTx(next)
+    resetAnim()
+  }
+
+  /** 改阈值即重置动画 */
+  function setMinSupport(v: number) {
+    setRawSupport(v)
+    resetAnim()
+  }
+
+  const transactions = rawTx
+  const minSupport = rawSupport
+
   // ---- 格理论演示 ----
   const [latticeThreshold, setLatticeThreshold] = useState(0.4)
   const [prunedFrom, setPrunedFrom] = useState<string | null>(null)
@@ -50,17 +75,13 @@ export default function AssociationLab() {
   const totalSteps = result.levels.length * 2
   const done = stepIdx >= totalSteps - 1 && totalSteps > 0
 
-  // 数据或阈值变化 → 动画从头开始
-  useEffect(() => {
-    setStepIdx(-1)
-    setAuto(false)
-    setHighlightKey(null)
-  }, [transactions, minSupport])
-
   // 自动播放
   useEffect(() => {
     if (!auto) return
     if (stepIdx >= totalSteps - 1) {
+    // 自动播放到末尾就该停：这是对定时器这一外部系统的同步，
+    // 属于 useEffect 的正当用途（不是把 props 同步成 state）。
+    // eslint-disable-next-line react-hooks/set-state-in-effect
       setAuto(false)
       return
     }

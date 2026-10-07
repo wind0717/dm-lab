@@ -1,7 +1,7 @@
 // XGBoost 逐步推演：第 k 步 = 加一轮提升（拟合当前负梯度残差 y−p 的小树）
 // 画布：概率背景着色 + 本轮被"重点关照"的样本高亮（残差越大圈越大）
 // 对比开关：只看第 1 棵树 vs 全部 k 轮叠加（第一轮粗糙、逐轮精细）
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import SliderRow from '@/components/SliderRow'
 import ThinkBox from '@/components/ThinkBox'
@@ -42,10 +42,6 @@ export default function XgbWalk() {
   const totalSteps = walk ? walk.trees.length : 0
   const curStep = Math.min(step, totalSteps)
   const showFirst = firstOnly && curStep >= 1
-
-  useEffect(() => {
-    if (step > totalSteps) setStep(totalSteps)
-  }, [totalSteps, step])
 
   const cur = walk?.steps[curStep]
   const done = curStep >= totalSteps && totalSteps > 0

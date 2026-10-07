@@ -169,6 +169,8 @@ export default function ClusterWorkbench() {
   // ---- DBSCAN 自动播放 ----
   useEffect(() => {
     if (!dbAuto || !db || db.done) {
+      // 跑到底就停：这是对定时器这一外部系统的同步，属 useEffect 的正当用途
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       if (dbAuto && db?.done) setDbAuto(false)
       return
     }
@@ -180,6 +182,8 @@ export default function ClusterWorkbench() {
   useEffect(() => {
     if (!hierAuto || !hier) return
     if (hierStep >= hier.merges.length) {
+      // 同上：跑到底停掉自动播放
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setHierAuto(false)
       return
     }
@@ -230,17 +234,22 @@ export default function ClusterWorkbench() {
     setCutHeight(0)
   }
   const hierDone = hier !== null && hierStep >= hier.merges.length
-  // 完成后自动给出一个建议切割高度（切成 min(3, n-1) 簇）
-  useEffect(() => {
-    if (hierDone && hier && !cutTouched) {
-      const wantK = Math.min(3, Math.max(2, hier.n - 1))
-      const idx = hier.merges.length - (wantK - 1)
-      const h = idx >= 0 && idx < hier.merges.length ? (hier.merges[idx].distance + (idx > 0 ? hier.merges[idx - 1].distance : 0)) / 2 : hier.maxDist / 2
-      setCutHeight(+h.toFixed(1))
-    }
-  }, [hierDone, hier, cutTouched])
 
-  const hierCut = useMemo(() => (hier && hierDone ? cutTree(hier, cutHeight) : null), [hier, hierDone, cutHeight])
+  /**
+   * 切割高度：用户没手动拖过时，完成后自动建议一个能切成 min(3, n-1) 簇的高度。
+   * 原本用 effect + setState 写回派生值，会多触发一轮渲染，直接算更准。
+   */
+  const suggestedCut = useMemo(() => {
+    if (!hierDone || !hier || cutTouched) return cutHeight
+    const wantK = Math.min(3, Math.max(2, hier.n - 1))
+    const idx = hier.merges.length - (wantK - 1)
+    const h = idx >= 0 && idx < hier.merges.length
+      ? (hier.merges[idx].distance + (idx > 0 ? hier.merges[idx - 1].distance : 0)) / 2
+      : hier.maxDist / 2
+    return +h.toFixed(1)
+  }, [hierDone, hier, cutTouched, cutHeight])
+
+  const hierCut = useMemo(() => (hier && hierDone ? cutTree(hier, suggestedCut) : null), [hier, hierDone, suggestedCut])
   const hierAnimLabels = useMemo(() => (hier && !hierDone ? labelsAfterMerges(hier, hierStep) : null), [hier, hierDone, hierStep])
 
   // ---- 评估面板用的标签 ----
@@ -823,7 +832,7 @@ export default function ClusterWorkbench() {
                 {hier && (
                   <SliderRow
                     label={`切一刀的高度（当前 ${hierDone ? hierCut?.k ?? 0 : '—'} 个簇）`}
-                    value={cutHeight}
+                    value={suggestedCut}
                     min={0}
                     max={Math.max(1, Math.ceil(hier.maxDist))}
                     step={0.5}
@@ -845,7 +854,7 @@ export default function ClusterWorkbench() {
                 <CardTitle className="text-base text-stone-800">树状图（家谱树，随合并生长）</CardTitle>
               </CardHeader>
               <CardContent>
-                <Dendrogram result={hier} step={hierStep} cutHeight={cutHeight} cutLabels={hierDone ? hierCut?.labels ?? null : null} />
+                <Dendrogram result={hier} step={hierStep} cutHeight={suggestedCut} cutLabels={hierDone ? hierCut?.labels ?? null : null} />
                 <p className="mt-1 text-xs leading-5 text-stone-500">
                   横轴是样本（同簇的排在一起），纵轴是合并距离——越早合并的簇越"亲"。橙色虚线是"切一刀"的位置，斩断几根树枝就得到几簇。
                 </p>
