@@ -406,7 +406,7 @@ function BiasVarianceSection({ onNavigate }: { onNavigate?: Nav }) {
       <CardContent className="space-y-4">
         <div className="grid gap-6 lg:grid-cols-[400px_1fr]">
           <div className="space-y-3">
-            <div className="grid grid-cols-2 gap-3" data-testid="bv-targets">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2" data-testid="bv-targets">
               <Target bias={0} spread={8} seed={round * 11 + 1} label="低偏差 · 低方差" sub="又准又稳：理想模型" />
               <Target bias={0} spread={28} seed={round * 11 + 2} label="低偏差 · 高方差" sub="平均准但不稳：过拟合" />
               <Target bias={30} spread={8} seed={round * 11 + 3} label="高偏差 · 低方差" sub="稳定地打偏：欠拟合" />

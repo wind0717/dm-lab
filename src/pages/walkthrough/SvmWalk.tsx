@@ -296,7 +296,7 @@ export default function SvmWalk() {
                     被闯入的样本把边界往外推（减少误伤）。
                   </p>
                 )}
-                <div className="grid grid-cols-2 gap-x-3 gap-y-1 font-mono text-xs text-stone-700">
+                <div className="grid grid-cols-1 gap-x-3 gap-y-1 font-mono sm:grid-cols-2 text-xs text-stone-700">
                   <span>
                     迭代轮数 = <b className="text-indigo-700">{curStep}</b>
                   </span>

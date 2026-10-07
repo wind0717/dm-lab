@@ -261,7 +261,7 @@ export default function ForestWalk() {
                 </p>
               )}
               {curStep >= 1 && walk && curStat && (
-                <div className="grid grid-cols-2 gap-x-3 gap-y-1 font-mono text-xs text-stone-700">
+                <div className="grid grid-cols-1 gap-x-3 gap-y-1 font-mono sm:grid-cols-2 text-xs text-stone-700">
                   <span className="col-span-2">
                     本树抽到的不同样本 ≈{' '}
                     <b className="text-indigo-700">{new Set(walk.trees[curStep - 1].sampleIdx).size}</b> / {walk.Xtr.length} 个

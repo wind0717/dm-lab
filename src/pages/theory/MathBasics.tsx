@@ -543,6 +543,7 @@ function CourseSimSection() {
           ))}
         </div>
         <div className="overflow-x-auto rounded-lg border border-stone-200">
+          <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-stone-200 bg-stone-50 text-xs text-stone-500">
@@ -559,6 +560,7 @@ function CourseSimSection() {
               {row('学生乙', sb, setSb, 'text-orange-600')}
             </tbody>
           </table>
+          </div>
         </div>
         <div>
           <div className="flex items-baseline justify-between text-sm">
@@ -761,6 +763,7 @@ function MatrixSection() {
           {/* 表格 */}
           <div>
             <p className="mb-2 text-xs font-medium text-stone-500">你熟悉的表格</p>
+            <div className="overflow-x-auto">
             <table className="border-collapse text-sm">
               <thead>
                 <tr>
@@ -797,6 +800,7 @@ function MatrixSection() {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
           {/* 矩阵 */}
           <div>
@@ -804,6 +808,7 @@ function MatrixSection() {
             <div className="flex items-stretch">
               <span className="mr-2 self-center font-mono text-lg text-stone-600">X =</span>
               <div className="rounded-l-lg border-y-2 border-l-2 border-stone-400" style={{ width: 8 }} />
+              <div className="overflow-x-auto">
               <table className="border-collapse text-sm">
                 <tbody>
                   {MATRIX_SCORES.map((row, i) => (
@@ -824,6 +829,7 @@ function MatrixSection() {
                   ))}
                 </tbody>
               </table>
+              </div>
               <div className="rounded-r-lg border-y-2 border-r-2 border-stone-400" style={{ width: 8 }} />
             </div>
             {hover && (

@@ -290,7 +290,7 @@ export default function XgbWalk() {
                     （猜错 {focus.wrong} 个 + 没把握 {focus.unsure} 个）。
                   </p>
                 )}
-                <div className="grid grid-cols-2 gap-x-3 gap-y-1 font-mono text-xs text-stone-700">
+                <div className="grid grid-cols-1 gap-x-3 gap-y-1 font-mono sm:grid-cols-2 text-xs text-stone-700">
                   <span>
                     对数损失 = <b className="text-orange-600">{cur.loss.toFixed(4)}</b>
                   </span>

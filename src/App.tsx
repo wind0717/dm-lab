@@ -105,19 +105,20 @@ function Shell() {
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-2 px-6 py-3">
           <button
             onClick={() => routerNavigate('/')}
-            className="flex items-center gap-2 text-base font-bold text-stone-800"
+            className="flex items-center gap-2 text-sm font-bold text-stone-800 sm:text-base"
           >
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-600 text-white">
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-indigo-600 text-white">
               <FlaskConical className="h-4 w-4" />
             </span>
             数据挖掘实验教学平台
           </button>
-          <nav className="flex flex-wrap gap-1">
+          {/* 窄屏导航项紧凑些，6 个按钮才挤得进一行 */}
+          <nav className="-mx-1 flex flex-wrap gap-1">
             {NAV.map((n) => (
               <button
                 key={n.id}
                 onClick={() => routerNavigate(DEFAULT_PATH[n.id])}
-                className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm transition-colors ${
+                className={`flex items-center gap-1.5 rounded-md px-2 py-1.5 text-xs transition-colors sm:px-3 sm:text-sm ${
                   currentPage === n.id
                     ? 'bg-indigo-600 font-medium text-white'
                     : 'text-stone-600 hover:bg-stone-200/70'

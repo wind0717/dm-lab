@@ -278,7 +278,7 @@ export default function KMeansLab() {
             </p>
 
             {/* 状态行 */}
-            <div className="mt-3 grid grid-cols-3 gap-3 text-center">
+            <div className="mt-3 grid grid-cols-2 gap-3 text-center sm:grid-cols-3">
               <div className="rounded-lg bg-stone-50 py-2">
                 <p className="text-xs text-stone-500">迭代轮数</p>
                 <p className="font-mono text-lg font-bold text-indigo-700">{iteration}</p>

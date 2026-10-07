@@ -711,7 +711,7 @@ export default function ClusterWorkbench() {
                     重置
                   </Button>
                 </div>
-                <div className="grid grid-cols-3 gap-2 text-center">
+                <div className="grid grid-cols-2 gap-2 text-center sm:grid-cols-3">
                   <div className="rounded-lg bg-stone-50 py-1.5">
                     <p className="text-[10px] text-stone-500">已处理</p>
                     <p className="font-mono text-sm font-bold text-indigo-700">

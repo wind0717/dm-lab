@@ -116,6 +116,7 @@ function WeatherModule({ num1, num2 }: { num1: string; num2: string }) {
           <div className="grid gap-6 lg:grid-cols-[300px_1fr]">
             {/* 2×2 列联表 */}
             <div>
+              <div className="overflow-x-auto">
               <table className="w-full border-collapse text-center text-sm">
                 <thead>
                   <tr>
@@ -137,6 +138,7 @@ function WeatherModule({ num1, num2 }: { num1: string; num2: string }) {
                   </tr>
                 </tbody>
               </table>
+              </div>
             </div>
             {/* 熵条形 */}
             <div className="space-y-3">
@@ -536,6 +538,7 @@ function GainRatioSection({ num }: { num: string }) {
           </div>
           {/* 对比表 */}
           <div className="min-w-[300px] flex-1">
+            <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-stone-200 text-left text-xs text-stone-500">
@@ -560,6 +563,7 @@ function GainRatioSection({ num }: { num: string }) {
                 </tr>
               </tbody>
             </table>
+            </div>
             <p className="mt-2 rounded-lg bg-stone-50 px-3 py-2 text-xs leading-5 text-stone-500">
               按学号分裂的 IG = {byId.ig.toFixed(3)} 看似最优，但 SplitInfo = log₂{cur.n} ≈ {byId.si.toFixed(2)} 也很大，增益率反而平平——C4.5 正是用增益率避开这种"死记硬背"的分裂。
             </p>

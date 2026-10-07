@@ -243,7 +243,7 @@ export default function DecisionTreeLab({ onNavigate }: { onNavigate?: (p: PageI
             </svg>
 
             {/* 指标 */}
-            <div className="mt-3 grid grid-cols-3 gap-3 text-center">
+            <div className="mt-3 grid grid-cols-2 gap-3 text-center sm:grid-cols-3">
               <div className="rounded-lg bg-stone-50 py-2">
                 <p className="text-xs text-stone-500">训练准确率</p>
                 <p className="font-mono text-lg font-bold text-indigo-700">{(accuracy * 100).toFixed(1)}%</p>

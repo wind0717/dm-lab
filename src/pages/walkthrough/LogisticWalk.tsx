@@ -275,7 +275,7 @@ export default function LogisticWalk() {
                     先随便画一条线（w、b 取随机值），此时边界乱指、损失很高。接下来每一步都沿着"让损失下降"的方向修正一点点。
                   </p>
                 )}
-                <div className="grid grid-cols-2 gap-x-3 gap-y-1 font-mono text-xs text-stone-700">
+                <div className="grid grid-cols-1 gap-x-3 gap-y-1 font-mono sm:grid-cols-2 text-xs text-stone-700">
                   <span>
                     w₁ = <b className="text-indigo-700">{cur.w[0]?.toFixed(3)}</b>
                   </span>
