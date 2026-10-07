@@ -6,6 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
 import SliderRow from '@/components/SliderRow'
+import { usePersistedState } from '@/hooks/usePersistedState'
 import ThinkBox from '@/components/ThinkBox'
 import TreeDiagram from '@/components/TreeDiagram'
 import {
@@ -29,19 +30,23 @@ const GX = 60 // 决策边界网格列数
 const GY = 48 // 决策边界网格行数
 
 export default function DecisionTreeLab({ onNavigate }: { onNavigate?: (p: PageId, subTab?: string) => void }) {
-  // ---- 数据 ----
-  const [preset, setPreset] = useState<DTPreset>('linear')
-  const [perClass, setPerClass] = useState(60)
-  const [noise, setNoise] = useState(6)
-  const [points, setPoints] = useState<Pt[]>(() => genDTPreset('linear', 60, 6))
-  const [seed, setSeed] = useState(DEFAULT_DATA_SEED)
+  // ---- 数据（参数与种子存档，刷新后不丢）----
+  const [preset, setPreset] = usePersistedState<DTPreset>('dtree:preset', 'linear')
+  const [perClass, setPerClass] = usePersistedState('dtree:perClass', 60)
+  const [noise, setNoise] = usePersistedState('dtree:noise', 6)
+  const [seed, setSeed] = usePersistedState('dtree:seed', DEFAULT_DATA_SEED)
+  // points 不存档：由 preset/perClass/noise/seed 确定性重算，
+  // 既省存储（200 个点 × JSON 约 10KB），又保证刷新后看到同一批样本。
+  // 注意用惰性初始化：usePersistedState 在同一次渲染里已返回恢复出的参数，
+  // 所以这里能直接用它们生成样本，不需要额外的 effect 去"补一次"。
+  const [points, setPoints] = useState<Pt[]>(() => genDTPreset(preset, perClass, noise, seed))
   const [addClass, setAddClass] = useState<-1 | 0 | 1>(-1) // -1 关闭点击添加
 
-  // ---- 算法配置 ----
-  const [criterion, setCriterion] = useState<Criterion>('gini')
-  const [maxDepth, setMaxDepth] = useState(4)
-  const [minLeaf, setMinLeaf] = useState(3)
-  const [showBoundary, setShowBoundary] = useState(true)
+  // ---- 算法配置（存档）----
+  const [criterion, setCriterion] = usePersistedState<Criterion>('dtree:criterion', 'gini')
+  const [maxDepth, setMaxDepth] = usePersistedState('dtree:maxDepth', 4)
+  const [minLeaf, setMinLeaf] = usePersistedState('dtree:minLeaf', 3)
+  const [showBoundary, setShowBoundary] = usePersistedState('dtree:showBoundary', true)
 
   // ---- 步进状态 ----
   const [step, setStep] = useState(0)

@@ -31,6 +31,7 @@ import {
   type EncodeMethod,
 } from '@/lib/preprocess'
 import { Database, UploadCloud, ArrowUp, ArrowDown, ArrowRight, RefreshCw, Eraser } from 'lucide-react'
+import { usePersistedState } from '@/hooks/usePersistedState'
 
 // ------------------------------------------------------------
 // 操作算子定义
@@ -401,20 +402,23 @@ interface Props {
 }
 
 export default function PreprocessingLab({ onSendToClassification }: Props) {
-  // ---- 数据来源 ----
-  const [srcTab, setSrcTab] = useState<'builtin' | 'csv'>('builtin')
-  const [nSamples, setNSamples] = useState(200)
-  const [missingRate, setMissingRate] = useState(0.08)
-  const [outlierStrength, setOutlierStrength] = useState(0.5)
-  const [seed, setSeed] = useState(42)
+  // ---- 数据来源（参数与种子存档，刷新后不丢）----
+  const [srcTab, setSrcTab] = usePersistedState<'builtin' | 'csv'>('prep:srcTab', 'builtin')
+  const [nSamples, setNSamples] = usePersistedState('prep:nSamples', 200)
+  const [missingRate, setMissingRate] = usePersistedState('prep:missingRate', 0.08)
+  const [outlierStrength, setOutlierStrength] = usePersistedState('prep:outlierStrength', 0.5)
+  const [seed, setSeed] = usePersistedState('prep:seed', 42)
+  // 内置数据由参数派生（useMemo），不存档：刷新后自动重算出同一份「脏数据」
   const builtinData = useMemo(
     () => genDirtyDataset({ n: nSamples, missingRate, outlierStrength, seed }),
     [nSamples, missingRate, outlierStrength, seed],
   )
+  // csvData 不存档：可能几 MB，存进 localStorage 会撑爆配额
   const [csvData, setCsvData] = useState<PrepData | null>(null)
-  const [labelChoice, setLabelChoice] = useState<number | null>(5) // builtin 标签列 = 5
-  const [ops, setOps] = useState<OpInstance[]>(DEFAULT_OPS)
-  const [histCol, setHistCol] = useState(1) // 叠加直方图选中的"原始列"
+  const [labelChoice, setLabelChoice] = usePersistedState<number | null>('prep:labelChoice', 5) // builtin 标签列 = 5
+  // 流水线配置存档 —— 这是预处理模块最不能丢的东西（6 个算子的开关/列/参数）
+  const [ops, setOps] = usePersistedState<OpInstance[]>('prep:ops', DEFAULT_OPS)
+  const [histCol, setHistCol] = usePersistedState('prep:histCol', 1) // 叠加直方图选中的"原始列"
 
   const src: PrepData = useMemo(() => {
     const base = srcTab === 'csv' && csvData ? csvData : builtinData

@@ -7,6 +7,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import SliderRow from '@/components/SliderRow'
+import { usePersistedState } from '@/hooks/usePersistedState'
 import ThinkBox from '@/components/ThinkBox'
 import {
   apriori,
@@ -30,19 +31,19 @@ export default function AssociationLab() {
   // 原先放在 useEffect 里监听，但那样会先渲染一帧旧进度再纠正（肉眼可见闪一下），
   // 改为在数据变更入口就重置。React 18+ 的推荐做法。
   const [rawTx, setRawTx] = useState<Transaction[]>(() => genCampusBasket(200, 42))
-  const [dataTab, setDataTab] = useState<'builtin' | 'editor' | 'csv'>('builtin')
+  const [dataTab, setDataTab] = usePersistedState<'builtin' | 'editor' | 'csv'>('assoc:dataTab', 'builtin')
   const [csvError, setCsvError] = useState<string | null>(null)
   const [csvName, setCsvName] = useState('')
 
   // ---- Apriori 动画 ----
-  const [rawSupport, setRawSupport] = useState(0.15)
+  const [rawSupport, setRawSupport] = usePersistedState('assoc:minSupport', 0.15)
   const [stepIdx, setStepIdx] = useState(-1) // -1 未开始；每层 2 步：计数 / 剪枝
   const [auto, setAuto] = useState(false)
 
-  // ---- 规则 ----
-  const [minConf, setMinConf] = useState(0.5)
-  const [sortBy, setSortBy] = useState<'support' | 'confidence' | 'lift'>('lift')
-  const [sortDesc, setSortDesc] = useState(true)
+  // ---- 规则（阈值与排序偏好存档，跨会话保留）----
+  const [minConf, setMinConf] = usePersistedState('assoc:minConf', 0.5)
+  const [sortBy, setSortBy] = usePersistedState<'support' | 'confidence' | 'lift'>('assoc:sortBy', 'lift')
+  const [sortDesc, setSortDesc] = usePersistedState('assoc:sortDesc', true)
   const [highlightKey, setHighlightKey] = useState<string | null>(null)
 
   /** 动画归零：换数据或换阈值时调用 */

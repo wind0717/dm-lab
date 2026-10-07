@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import SliderRow from '@/components/SliderRow'
+import { usePersistedState } from '@/hooks/usePersistedState'
 import ThinkBox from '@/components/ThinkBox'
 import CurveChart from '@/components/CurveChart'
 import { MethodIntroCard } from '@/components/MethodIntro'
@@ -18,16 +19,21 @@ const H = 420
 const MAX_ITERS = 30
 
 export default function KMeansLab() {
-  // ---- 数据 ----
-  const [preset, setPreset] = useState<KMPreset>('blobs')
-  const [perGroup, setPerGroup] = useState(50)
-  const [noise, setNoise] = useState(4)
-  const [points, setPoints] = useState<RawPt[]>(() => genKMPreset('blobs', 50, 4))
-  const [seed, setSeed] = useState(DEFAULT_DATA_SEED)
+  // ---- 数据（参数与种子存档，刷新后不丢）----
+  const [preset, setPreset] = usePersistedState<KMPreset>('kmeans:preset', 'blobs')
+  const [perGroup, setPerGroup] = usePersistedState('kmeans:perGroup', 50)
+  const [noise, setNoise] = usePersistedState('kmeans:noise', 4)
+  const [seed, setSeed] = usePersistedState('kmeans:seed', DEFAULT_DATA_SEED)
+  // points 不存档：由 preset/perGroup/noise/seed 确定性重算（省空间且样本一致）
+  // 惰性初始化：此时 usePersistedState 已返回恢复出的参数，直接用它们生成即可
+  const [points, setPoints] = useState<RawPt[]>(() => genKMPreset(preset, perGroup, noise, seed))
   const [addPointMode, setAddPointMode] = useState(false)
 
-  // ---- K-Means 状态 ----
-  const [k, setK] = useState(3)
+  // ---- K-Means 参数（存档）----
+  const [k, setK] = usePersistedState('kmeans:k', 3)
+  const [showLines, setShowLines] = usePersistedState('kmeans:showLines', true)
+
+  // ---- 推演过程（不存档：刷新后从头开始，符合「重新推演一遍」的教学预期）----
   const [placeMode, setPlaceMode] = useState(false) // 放置质心模式
   const [centroids, setCentroids] = useState<Centroid[]>([])
   const [assignment, setAssignment] = useState<number[] | null>(null)
@@ -36,8 +42,8 @@ export default function KMeansLab() {
   const [converged, setConverged] = useState(false)
   const [phase, setPhase] = useState<'idle' | 'assigned' | 'updated'>('idle')
   const [lastShift, setLastShift] = useState<number | null>(null) // 上一轮更新质心的最大移动距离（解说条用）
-  const [showLines, setShowLines] = useState(true)
   const [running, setRunning] = useState(false)
+
 
   const resetRun = () => {
     setAssignment(null)

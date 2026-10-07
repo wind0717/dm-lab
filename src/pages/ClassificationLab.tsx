@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import SliderRow from '@/components/SliderRow'
 import ThinkBox from '@/components/ThinkBox'
 import CsvUpload from '@/components/CsvUpload'
+import { usePersistedState } from '@/hooks/usePersistedState'
 import DecisionTreeLab from '@/pages/DecisionTreeLab'
 import LogisticWalk from '@/pages/walkthrough/LogisticWalk'
 import KnnWalk from '@/pages/walkthrough/KnnWalk'
@@ -248,16 +249,23 @@ export default function ClassificationLab({ injectedCsv, onInjectedConsumed, rou
 // 多方法对比工作台
 // ============================================================
 function Workbench({ injectedCsv, onInjectedConsumed }: { injectedCsv?: CsvData | null; onInjectedConsumed?: () => void }) {
-  const [method, setMethod] = useState<MethodId>('tree')
-  const [params, setParams] = useState(DEFAULT_PARAMS)
+  // ---- 实验参数（存档：刷新后接着调，不用重设）----
+  const [method, setMethod] = usePersistedState<MethodId>('workbench:method', 'tree')
+  const [params, setParams] = usePersistedState<Record<MethodId, Record<string, number>>>('workbench:params', DEFAULT_PARAMS)
+  const [testRatio, setTestRatio] = usePersistedState('workbench:testRatio', 0.3)
 
-  // ---- 数据来源 ----
-  const [dataTab, setDataTab] = useState<'builtin' | 'csv' | 'draw'>('builtin')
-  const [caseId, setCaseId] = useState<CaseId>('churn')
-  const [caseData, setCaseData] = useState(() => genCaseDataset('churn'))
+  // ---- 数据来源选择（存档）----
+  const [dataTab, setDataTab] = usePersistedState<'builtin' | 'csv' | 'draw'>('workbench:dataTab', 'builtin')
+  const [caseId, setCaseId] = usePersistedState<CaseId>('workbench:caseId', 'churn')
+  // caseData / csvData / drawPoints 不存档：前者可由caseId 确定性重算，
+  // 后两者体积大（CSV 可能几 MB）且属临时数据，存进 localStorage 会撑爆配额。
+
+  // 惰性初始化：caseId 此刻已是恢复出的值，直接生成对应数据集
+  const [caseData, setCaseData] = useState(() => genCaseDataset(caseId))
   const [csvData, setCsvData] = useState<CsvData | null>(null)
   const [drawPoints, setDrawPoints] = useState<Pt[]>([])
   const [drawClass, setDrawClass] = useState<-1 | 0 | 1>(0)
+
 
   // ---- 来自「数据预处理」的接力数据 ----
   const [fromPre, setFromPre] = useState(false)
@@ -271,8 +279,7 @@ function Workbench({ injectedCsv, onInjectedConsumed }: { injectedCsv?: CsvData 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [injectedCsv])
 
-  // ---- 评估 ----
-  const [testRatio, setTestRatio] = useState(0.3)
+  // ---- 评估（testRatio 已上移至存档区）----
   const [results, setResults] = useState<Partial<Record<MethodId, EvalResult>>>({})
   const [training, setTraining] = useState(false)
   const [trainError, setTrainError] = useState<string | null>(null)
@@ -1100,7 +1107,6 @@ function DecisionRegion({ clf, data, result }: { clf: Classifier; data: WorkData
       pred: clf.predict([row])[0],
     }))
     return { mins, maxs, cells, pts }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clf, data, result])
 
   const px = (v: number) => ((v - mins[0]) / (maxs[0] - mins[0] || 1)) * W
