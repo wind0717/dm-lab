@@ -1,5 +1,7 @@
 // 模块一：理论基础 —— 四个子页签：数学基础急救包 / 信息论全家桶 / GINI 与不纯度家族 / 模型思维实验室
-import { useEffect, useState } from 'react'
+// 子页签由 URL 驱动（#/theory/info），保证链接可直达、刷新不丢
+import { useEffect } from 'react'
+import { useNavigate } from 'react-router'
 import MathBasics from '@/pages/theory/MathBasics'
 import InfoTheory from '@/pages/theory/InfoTheory'
 import GiniFamily from '@/pages/theory/GiniFamily'
@@ -15,8 +17,18 @@ const TABS: Array<{ id: TabId; label: string }> = [
   { id: 'model', label: '模型思维实验室' },
 ]
 
-export default function TheoryLab({ onNavigate, initialTab = 'math' }: { onNavigate?: (p: PageId, subTab?: string) => void; initialTab?: TabId }) {
-  const [tab, setTab] = useState<TabId>(initialTab)
+const VALID: TabId[] = TABS.map((t) => t.id)
+
+export default function TheoryLab({
+  onNavigate,
+  routeTab = 'math',
+}: {
+  onNavigate?: (p: PageId, subTab?: string) => void
+  routeTab?: TabId
+}) {
+  const routerNavigate = useNavigate()
+  // 兜底非法子页签（如手输 #/theory/xxx）
+  const tab: TabId = VALID.includes(routeTab) ? routeTab : 'math'
 
   // 切换子页签时回到顶部，避免从长页签底部切过来后落在半中腰
   useEffect(() => {
@@ -31,7 +43,7 @@ export default function TheoryLab({ onNavigate, initialTab = 'math' }: { onNavig
           {TABS.map((t) => (
             <button
               key={t.id}
-              onClick={() => setTab(t.id)}
+              onClick={() => routerNavigate(`/theory/${t.id}`)}
               className={`rounded-md px-4 py-1.5 text-sm transition-colors ${
                 tab === t.id ? 'bg-indigo-600 font-medium text-white' : 'text-stone-600 hover:bg-stone-100'
               }`}

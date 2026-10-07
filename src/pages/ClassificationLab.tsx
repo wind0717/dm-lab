@@ -1,5 +1,7 @@
 // 模块三：分类实验 —— 「多方法对比工作台」+ 七个「逐步推演」
+// 子页签由 URL 驱动（#/tree/svm），保证链接可直达、刷新不丢
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useNavigate } from 'react-router'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import SliderRow from '@/components/SliderRow'
@@ -181,7 +183,8 @@ interface ClassificationLabProps {
   /** 来自「数据预处理」的接力数据：到达后自动载入 CSV 数据源 */
   injectedCsv?: CsvData | null
   onInjectedConsumed?: () => void
-  initialSubTab?: ClassSubTab
+  /** 由 URL 驱动的当前子页签（#/tree/svm） */
+  routeTab?: ClassSubTab
   onNavigate?: (p: PageId, subTab?: string) => void
 }
 
@@ -198,8 +201,12 @@ const SUB_TABS: Array<[ClassSubTab, string]> = [
   ['xgb', 'XGBoost 推演'],
 ]
 
-export default function ClassificationLab({ injectedCsv, onInjectedConsumed, initialSubTab = 'workbench', onNavigate }: ClassificationLabProps) {
-  const [subTab, setSubTab] = useState<ClassSubTab>(initialSubTab)
+const VALID: ClassSubTab[] = SUB_TABS.map(([id]) => id)
+
+export default function ClassificationLab({ injectedCsv, onInjectedConsumed, routeTab = 'workbench', onNavigate }: ClassificationLabProps) {
+  const routerNavigate = useNavigate()
+  // 兜底非法子页签
+  const subTab: ClassSubTab = VALID.includes(routeTab) ? routeTab : 'workbench'
 
   // 切换子页签时回到顶部
   useEffect(() => {
@@ -214,7 +221,7 @@ export default function ClassificationLab({ injectedCsv, onInjectedConsumed, ini
           {SUB_TABS.map(([id, label]) => (
             <button
               key={id}
-              onClick={() => setSubTab(id)}
+              onClick={() => routerNavigate(`/tree/${id}`)}
               data-testid={`subtab-${id}`}
               className={`rounded-md px-4 py-1.5 text-sm transition-colors ${
                 subTab === id ? 'bg-indigo-600 font-medium text-white' : 'text-stone-600 hover:bg-stone-100'
