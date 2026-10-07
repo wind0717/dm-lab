@@ -4,16 +4,35 @@
 //   本站部署为纯静态托管（dist/ 丢到任意静态平台），没有服务端重写规则。
 //   History 模式的 /tree/svm 直接访问会 404，Hash 模式不需要任何服务端配置。
 //   代价是 URL 多一个 #，但换来「任何静态托管零配置可用 + 可挂子目录」。
-import { useEffect, useState } from 'react'
+import { Suspense, lazy, useEffect, useState } from 'react'
 import { HashRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router'
 import { FlaskConical, Home, BookOpen, Wrench, GitBranch, ScatterChart, ShoppingBasket } from 'lucide-react'
 import HomePage from '@/pages/HomePage'
-import TheoryLab from '@/pages/TheoryLab'
-import PreprocessingLab from '@/pages/PreprocessingLab'
-import ClassificationLab, { type ClassSubTab } from '@/pages/ClassificationLab'
-import ClusteringLab, { type ClusterTab } from '@/pages/ClusteringLab'
-import AssociationLab from '@/pages/AssociationLab'
 import type { CsvData } from '@/lib/csv'
+
+// 首页直接进（首屏必需），其余模块按需加载。
+// 学生首屏只下载首页 + 导航壳，点进哪模块才拉那块的代码。
+const TheoryLab = lazy(() => import('@/pages/TheoryLab'))
+const PreprocessingLab = lazy(() => import('@/pages/PreprocessingLab'))
+const ClassificationLab = lazy(() => import('@/pages/ClassificationLab'))
+const ClusteringLab = lazy(() => import('@/pages/ClusteringLab'))
+const AssociationLab = lazy(() => import('@/pages/AssociationLab'))
+
+// 类型从子页文件直接 import（type-only 会被摇树，不影响包体）
+import type { ClassSubTab } from '@/pages/ClassificationLab'
+import type { ClusterTab } from '@/pages/ClusteringLab'
+
+/** 模块加载中的占位（保持与页面一致的浅色底，避免闪白） */
+function Loading() {
+  return (
+    <div className="flex min-h-[60vh] items-center justify-center px-6">
+      <div className="flex flex-col items-center gap-3 text-stone-500">
+        <span className="h-6 w-6 animate-spin rounded-full border-2 border-stone-300 border-t-indigo-600" />
+        <p className="text-sm">正在加载实验模块…</p>
+      </div>
+    </div>
+  )
+}
 
 export type PageId = 'home' | 'theory' | 'prep' | 'tree' | 'cluster' | 'assoc'
 export type TheoryTab = 'math' | 'info' | 'gini' | 'model'
@@ -112,59 +131,61 @@ function Shell() {
         </div>
       </header>
 
-      {/* 页面主体：URL 段 → 各 Lab 的当前子页签 */}
+      {/* 页面主体：URL 段→ 各 Lab 的当前子页签 */}
       <main>
-        <Routes>
-          <Route path="/" element={<HomePage onNavigate={navigate} />} />
-          <Route
-            path="/theory/:tab"
-            element={
-              <TheoryLab
-                onNavigate={navigate}
-                routeTab={(segOf(location.pathname, 2) ?? 'math') as TheoryTab}
-              />
-            }
-          />
-          <Route
-            path="/prep"
-            element={
-              <PreprocessingLab
-                onSendToClassification={(d) => {
-                  setHandoffCsv({
-                    X: d.X,
-                    y: d.y,
-                    featureNames: d.featureNames,
-                    classNames: d.classNames,
-                    encodings: [],
-                    preview: d.X
-                      .slice(0, 5)
-                      .map((row, i) => [...row.map((v) => String(v)), d.classNames[d.y[i]]]),
-                    headers: [...d.featureNames, '标签'],
-                  })
-                  navigate('tree', 'workbench')
-                }}
-              />
-            }
-          />
-          <Route
-            path="/tree/:tab"
-            element={
-              <ClassificationLab
-                onNavigate={navigate}
-                routeTab={(segOf(location.pathname, 2) ?? 'workbench') as ClassSubTab}
-                injectedCsv={handoffCsv}
-                onInjectedConsumed={() => setHandoffCsv(null)}
-              />
-            }
-          />
-          <Route
-            path="/cluster/:tab"
-            element={<ClusteringLab routeTab={(segOf(location.pathname, 2) ?? 'kmeans') as ClusterTab} />}
-          />
-          <Route path="/assoc" element={<AssociationLab />} />
-          {/* 未知路径回首页 */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        <Suspense fallback={<Loading />}>
+          <Routes>
+            <Route path="/" element={<HomePage onNavigate={navigate} />} />
+            <Route
+              path="/theory/:tab"
+              element={
+                <TheoryLab
+                  onNavigate={navigate}
+                  routeTab={(segOf(location.pathname, 2) ?? 'math') as TheoryTab}
+                />
+              }
+            />
+            <Route
+              path="/prep"
+              element={
+                <PreprocessingLab
+                  onSendToClassification={(d) => {
+                    setHandoffCsv({
+                      X: d.X,
+                      y: d.y,
+                      featureNames: d.featureNames,
+                      classNames: d.classNames,
+                      encodings: [],
+                      preview: d.X
+                        .slice(0, 5)
+                        .map((row, i) => [...row.map((v) => String(v)), d.classNames[d.y[i]]]),
+                      headers: [...d.featureNames, '标签'],
+                    })
+                    navigate('tree', 'workbench')
+                  }}
+                />
+              }
+            />
+            <Route
+              path="/tree/:tab"
+              element={
+                <ClassificationLab
+                  onNavigate={navigate}
+                  routeTab={(segOf(location.pathname, 2) ?? 'workbench') as ClassSubTab}
+                  injectedCsv={handoffCsv}
+                  onInjectedConsumed={() => setHandoffCsv(null)}
+                />
+              }
+            />
+            <Route
+              path="/cluster/:tab"
+              element={<ClusteringLab routeTab={(segOf(location.pathname, 2) ?? 'kmeans') as ClusterTab} />}
+            />
+            <Route path="/assoc" element={<AssociationLab />} />
+            {/* 未知路径回首页 */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
       </main>
 
       <footer className="border-t border-stone-200 py-4 text-center text-xs text-stone-400">
