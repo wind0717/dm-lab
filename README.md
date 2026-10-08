@@ -1,73 +1,282 @@
-# React + TypeScript + Vite
+# 数据挖掘实验教学平台
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+> 看得见的数据挖掘 —— 每个算法步骤都画出来
 
-Currently, two official plugins are available:
+一个面向《数据挖掘》课程的**纯前端交互式实验教学平台**。学生不需要任何编程基础，
+通过拖动滑块、逐步执行、故意"搞破坏"，在动手中建立算法直觉。
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+**技术特点**：所有算法从零手写实现（不依赖 sklearn 等库），公式直接写在代码注释里，
+每个数值步骤都有对应的可视化。运行环境零后端、零外部请求，纯静态托管即可上线。
 
-## React Compiler
+---
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 目录
 
-## Expanding the ESLint configuration
+- [六大教学模块](#六大教学模块)
+- [快速开始](#快速开始)
+- [深链：把实验直接发给学生](#深链把实验直接发给学生)
+- [外网部署](#外网部署)
+- [教学使用建议](#教学使用建议)
+- [项目结构](#项目结构)
+- [自测与质量保障](#自测与质量保障)
+- [技术栈](#技术栈)
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+---
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## 六大教学模块
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+| # | 模块 | 内容 |
+|---|------|------|
+| 1 | **理论基础** | 概率统计直觉、向量与距离、矩阵与表格；熵、信息增益、互信息、KL 散度、增益率；GINI 与不纯度家族；偏差-方差模型思维 |
+| 2 | **数据预处理** | 缺失值、异常值、标准化、离散化、类别编码、SMOTE 过采样。六个算子像流水线一样叠加，直方图与统计量实时前后对比，处理完一键送去分类 |
+| 3 | **分类实验** | 决策树、kNN、逻辑回归、朴素贝叶斯、SVM、随机森林、XGBoost 七种方法同场竞技，含 ROC 曲线与混淆矩阵自动解读 |
+| 4 | **分类逐步推演** | 逻辑回归 / kNN / 朴素贝叶斯 / SVM / 随机森林 / XGBoost 六个算法的分步执行，看清每一步在算什么 |
+| 5 | **聚类实验** | K-Means、DBSCAN、层次聚类三种方法各自的分步推演 + 多方法对比工作台，含轮廓系数、Calinski-Harabasz、Davies-Bouldin、ARI、纯度等评估指标 |
+| 6 | **关联分析** | 从"啤酒与尿布"讲起，项集格剪枝动画、Apriori 逐层挖掘频繁项集，支持度 / 置信度 / 提升度三项指标拆穿"热门假象" |
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+另外还有**决策树逐步推演**（CART 分裂计算全展开）和**首页概念导览**
+（五个高频概念卡，每张卡带"去哪里亲手验证"的跳转）。
+
+---
+
+## 快速开始
+
+### 环境要求
+
+- **Node.js ≥ 20**（开发时用的是 v22）
+- 无需任何数据库、后端服务或 API Key
+
+### 本地开发
+
+```bash
+npm install       # 安装依赖
+npm run dev       # 启动开发服务器（默认 http://localhost:3000）
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### 构建
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm run build     # 类型检查 + 打包，产物在 dist/
 ```
+
+### 局域网共享（教室场景）
+
+macOS 下**双击 `启动局域网共享.command`** 即可。它会自动检查是否需要重新构建，
+然后启动静态服务并打印出局域网地址，同一 Wi-Fi 下的学生机可直接访问。
+
+也可以手动执行：
+
+```bash
+npm run build
+node lan-server.cjs 8080
+```
+
+> ⚠️ `lan-server.cjs` 无鉴权、无 HTTPS，**仅限可信局域网内使用，不可直接暴露到公网**。
+
+---
+
+## 深链：把实验直接发给学生
+
+平台的 URL 段就是实验位置，老师可以直接把某个具体实验的链接发到班级群，
+学生打开就落在那个实验上，不用自己找菜单。
+
+```
+https://你的域名/#/theory/math        理论基础 · 数学基础急救包
+https://你的域名/#/theory/info        理论基础 · 信息论全家桶
+https://你的域名/#/prep               数据预处理
+https://你的域名/#/tree/workbench     分类实验 · 多方法对比工作台
+https://你的域名/#/tree/dtree         分类实验 · 决策树逐步推演
+https://你的域名/#/tree/svm           分类实验 · SVM 推演
+https://你的域名/#/tree/xgb           分类实验 · XGBoost 推演
+https://你的域名/#/cluster/kmeans     聚类实验 · K-Means 推演
+https://你的域名/#/cluster/dbscan     聚类实验 · DBSCAN 推演
+https://你的域名/#/cluster/workbench  聚类实验 · 多方法对比工作台
+https://你的域名/#/assoc              关联分析 · Apriori 动画推演
+```
+
+用 `#` 的原因：平台是纯静态托管，没有服务端重写规则。Hash 模式（`/#/xxx`）
+在任何静态托管上都能直接用，不需要配置；Browser 模式（`/xxx`）深链访问会 404。
+
+浏览器前进 / 后退键正常工作，刷新页面保持在当前页签。
+
+---
+
+## 外网部署
+
+### 部署前检查清单
+
+```bash
+npm run build     # 产物在 dist/，共 3 个文件
+```
+
+- `base` 已设为相对路径，`dist` 可挂到任意静态平台的**任意子目录**
+- 无后端、无数据库、无环境变量、无外部 API 请求
+- 无 `dangerouslySetInnerHTML` / `eval`，无 XSS 注入面
+- **学生上传的 CSV 只在浏览器内存里解析，不上传到服务器**（隐私上是个优点，
+  但建议在课堂前明确告知学生）
+
+### 托管平台选型
+
+| 方案 | 成本 | 适用 |
+|------|------|------|
+| **腾讯云 COS / 阿里云 OSS + CDN** | 几元/月 |面向国内高校学生，访问最快（推荐） |
+| **校内服务器 Nginx** | 0 | 最合规，校园网内速度最快，数据不出校 |
+| Cloudflare Pages | 免费额度 | 快速验证，全球 CDN，国内偶尔不稳 |
+| Vercel / Netlify | 免费额度 | 同上 |
+
+任选一家，把 `dist/` 里的文件上传到对应目录即可，无需任何构建配置。
+
+### 建议的开场配置
+
+国内高校学生为主 → 腾讯云/阿里云 COS + CDN，并开启 HTTPS。
+
+---
+
+## 教学使用建议
+
+### 随机种子与可复现性
+
+所有内置数据集都由**种子**决定（默认 `42`）。这意味着：
+
+- **学生之间看到的是同一份数据** —— 可以直接讨论"为什么你的准确率 88%、我的是 81%"
+- **同一组参数反复跑结果一致** —— 指标变化只来自参数，不来自随机波动
+- 老师课堂演示的结论，学生课后输同一个种子就能原样复现
+
+每个实验页的「数据」面板都有种子输入框和「换一批数据」按钮。
+**建议**：课堂演示用默认种子，布置作业时指定一个种子让学生统一。
+
+### 参数存档
+
+学生调好的实验参数会**自动存到浏览器**，刷新页面不丢 —— 包括预处理的六步流水线配置。
+但推演进度、样本坐标、训练结果**不存**：这些由参数确定性重算，刷新后从头推演一遍
+（更符合教学预期）。
+
+换设备或换浏览器不保留存档（存在浏览器本地，不跨设备同步）。
+
+### 建议的教学路径
+
+```
+理论基础 → 数据预处理 → 分类实验 → 聚类实验 → 关联分析
+```
+
+每个模块都按「生活化类比 → 交互推演 → 自由实验」三段设计，
+建议学生先拖一拖、点一点建立直觉，再看公式。
+
+### CSV 上传的限制
+
+平台内置解析器的限制（教学取舍，报错时会给出中文提示）：
+
+- 仅逗号分隔，不支持引号内嵌逗号（Excel 导出时需用「数据 → 从文本/CSV 导入」重新导出）
+- 仅支持二分类（标签列必须恰好 2 种取值）
+- ≤ 5MB / ≤ 5000 行 / ≤ 20 个特征列
+- 非数值特征列若取值种类 > 20 种会报错
+
+---
+
+## 项目结构
+
+```
+src/
+├── lib/                    算法层：纯函数，零 React 依赖，可独立测试
+│   ├── classifiers.ts      7 种分类方法（决策树/kNN/逻辑回归/朴素贝叶斯/SVM/RF/XGBoost）
+│   ├── kmeans.ts           K-Means 分步执行（分配 / 更新拆开）
+│   ├── dbscan.ts           DBSCAN
+│   ├── hierarchical.ts     层次聚类
+│   ├── clusterMetrics.ts   轮廓系数 / CH / DB / ARI / Purity
+│   ├── apriori.tsApriori 频繁项集挖掘 + 规则生成
+│   ├── cart.ts             CART 决策树训练与分裂计算
+│   ├── preprocess.ts       六个预处理算子
+│   ├── metrics.ts          混淆矩阵 / P-R-F1 / ROC / AUC / 分层划分
+│   ├── datasets.ts         数据集生成（种子随机，可复现）
+│   ├── theoryMath.ts       理论演示的数学计算
+│   ├── infotheory.ts       熵 / 信息增益 / 互信息 / KL
+│   ├── entropy.ts          熵相关工具
+│   ├── walkthroughs.ts     逻辑回归 / kNN / 朴素贝叶斯推演
+│   ├── walkthroughs2.ts    SVM / 随机森林 / XGBoost 推演
+│   └── csv.ts              CSV 解析
+│
+├── pages/                  页面层
+│   ├── HomePage.tsx            首页 + 概念导览
+│   ├── TheoryLab.tsx           理论基础（4 个子页签）
+│   ├── PreprocessingLab.tsx    预处理流水线
+│   ├── ClassificationLab.tsx   分类实验（8 个子页签）
+│   ├── DecisionTreeLab.tsx     决策树逐步推演
+│   ├── KMeansLab.tsx           K-Means 推演
+│   ├── ClusteringLab.tsx       聚类实验（4 个子页签）
+│   ├── AssociationLab.tsx      关联分析
+│   ├── theory/                 理论四个子页
+│   ├── walkthrough/            六个推演子页 + 共享面板
+│   └── cluster/                DBSCAN / 层次聚类 + 共享面板
+│
+├── components/             通用组件
+│   ├── SeedControl.tsx     随机种子控制条
+│   ├── SliderRow.tsx       通用滑块行
+│   ├── StepControls.tsx    逐步推演控制条（上一步/下一步/自动播放/重置）
+│   ├── ThinkBox.tsx        "想一想"引导问题卡片
+│   ├── MethodIntro.tsx     方法原理与适用场景卡
+│   ├── TreeDiagram.tsx / Dendrogram.tsx / CurveChart.tsx / ClusterEvalPanel.tsx
+│   └── ui/                 shadcn 组件库
+│
+├── hooks/
+│   └── usePersistedState.ts实验参数存档（刷新不丢）
+│
+├── App.tsx                 根组件：HashRouter + 导航壳
+└── main.tsx / index.css    入口与全局样式
+```
+
+**分层原则**：`src/lib/` 全部是纯函数、不含任何 React 依赖，所以可以脱离界面独立测试。
+
+代码规模：约 23,000 行，其中算法层约 4,000 行（17 个文件），页面层约 11,000 行（24 个文件）。
+
+---
+
+## 自测与质量保障
+
+### 单元测试（算法正确性）
+
+```bash
+npm test
+```
+
+覆盖 `src/lib/` 全部算法模块：分类器训练与预测、K-Means 收敛性、DBSCAN 噪声点识别、
+层次聚类合并、Apriori 频繁项集正确性、评估指标数值、预处理算子、数据集可复现性。
+
+### 冒烟与专项脚本
+
+```bash
+node scripts/selftest-datasets.mjs   # 数据集种子可复现性（23 项断言）
+node scripts/selftest-persist.mjs    # 状态存档与容错（20 项断言）
+node scripts/audit.mjs               # 全页面 Puppeteer 审计（143 项检查 + 截图）
+```
+
+`scripts/audit.mjs` 会遍历六个主页面与全部子页签，检查横向溢出、
+控制台报错、关键交互，截图输出到 `audit-shots/`。改动页面布局后建议跑一次。
+
+### 代码质量
+
+```bash
+npm run lint     # ESLint，当前 0 error
+npm run build    # tsc 类型检查 + 打包
+```
+
+---
+
+## 技术栈
+
+| 层 | 选型 |
+|---|------|
+| 框架 | React 19 + TypeScript 5.9 |
+| 构建 | Vite 7（`base: './'`，产物可挂子目录） |
+| 路由 | react-router 7（HashRouter） |
+| 样式 | Tailwind CSS 3.4 + shadcn/ui（Radix UI） |
+| 图表 | Recharts + 手写 SVG 散点图 |
+| 测试 | Vitest + Puppeteer |
+
+首屏加载 gzip 约 118 KB（主包已按模块拆分，学生点进哪个实验才加载对应代码）。
+
+---
+
+## 许可与致谢
+
+算法实现参考了经典教材的公式表述（周志华《机器学习》与
+《数据挖掘：概念与技术》），教学文案为原创。

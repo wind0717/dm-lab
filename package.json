@@ -1,12 +1,17 @@
 {
-  "name": "my-app",
+  "name": "dm-lab",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "description": "数据挖掘实验教学平台 —— 看得见的数据挖掘，每个算法步骤都画出来",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "selftest": "node scripts/selftest-datasets.mjs && node scripts/selftest-persist.mjs",
+    "audit": "node scripts/audit.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -76,6 +81,7 @@
     "tw-animate-css": "^1.4.0",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.46.4",
-    "vite": "^7.2.4"
+    "vite": "^7.2.4",
+    "vitest": "^3.2.7"
   }
 }

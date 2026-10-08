@@ -1,6 +1,8 @@
 import path from "path"
 import react from "@vitejs/plugin-react"
 import { defineConfig } from "vite"
+// vitest 配置单独放在 vitest.config.ts，避免 vite 的类型定义里没有 test 字段
+
 import { inspectAttr } from 'kimi-plugin-inspect-react'
 
 // https://vite.dev/config/

@@ -12,8 +12,15 @@ export interface Transaction {
   items: string[]
 }
 
-/** 项集的唯一键（数组内已排序） */
-export const itemsetKey = (items: string[]) => items.join('|')
+/**
+ * 项集的唯一键。
+ *
+ * 内部先排序再 join，因此**调用方无需保证传入数组已排序**——
+ * 顺序不同但集合相同的项集会得到同一个键。
+ * （这很重要：genRules 用它作 supMap 的key，若顺序不一致会静默查不到支撑度。）
+ * 复制一份再排序，不修改调用方的数组。
+ */
+export const itemsetKey = (items: string[]) => [...items].sort().join('|')
 
 /** 支持度计数 = 包含该项集的交易数 */
 export function supportCount(transactions: Transaction[], itemset: string[]): number {
