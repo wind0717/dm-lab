@@ -4,6 +4,9 @@
   "version": "1.0.0",
   "description": "数据挖掘实验教学平台 —— 看得见的数据挖掘，每个算法步骤都画出来",
   "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

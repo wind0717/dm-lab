@@ -1,0 +1,64 @@
+# 数据挖掘实验教学平台 —— CI
+#
+# 每次 push 与 PR 都跑：类型检查 → 单元测试 → 代码规范 → 构建。
+# 目的是让算法库被改坏时能立刻发现——这个项目的核心资产是 src/lib 里
+# 约 4000 行手写算法，没有任何保护网的话很容易静默改坏。
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# 同一分支的新 push 取消旧的未完成运行，避免浪费配额
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: 类型检查 / 测试 / 规范 / 构建
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 设置 Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: 安装依赖
+        # 有 package-lock.json，用 npm ci 保证与提交时完全一致的依赖树
+        # （放在 setup-node 之后，缓存配置才生效）
+        run: npm ci
+
+      - name: 类型检查（tsc --noEmit）
+        # 注意：不跑 npm run build，因为那是 tsc -b && vite build，
+        # 构建单独一步做，这一步只关心类型
+        run: npx tsc -b --pretty false
+
+      - name: 单元测试（vitest）
+        run: npm test
+
+      - name: 代码规范（ESLint）
+        # --max-warnings=0：warning 也算失败。
+        # 当前基线是 0 error / 0 warning，这条门禁才真正有约束力。
+        run: npx eslint . --max-warnings=0
+
+      - name: 构建
+        run: npx vite build
+
+      - name: 上传构建产物
+        # 便于 PR 评审时直接下载 dist 试用，也方便排查"本地能构建但 CI 不能"
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          retention-days: 7
+          if-no-files-found: error

@@ -174,9 +174,10 @@ export default function ClusterWorkbench() {
       if (dbAuto && db?.done) setDbAuto(false)
       return
     }
+    // 点多时加快播放节奏（points.length 是真实的依赖，必须进依赖数组）
     const t = setTimeout(() => setDb((s) => (s ? dbscanStep(s) : s)), points.length > 80 ? 60 : 140)
     return () => clearTimeout(t)
-  }, [dbAuto, db])
+  }, [dbAuto, db, points.length])
 
   // ---- 层次聚类自动播放 ----
   useEffect(() => {
