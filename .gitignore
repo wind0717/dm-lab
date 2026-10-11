@@ -26,3 +26,7 @@ audit-shots/
 *.njsproj
 *.sln
 *.sw?
+
+# 远端部署验证脚本（可能含内网地址与凭据，不入库）
+scripts/_ssh_*.py
+scripts/_scp_*.py
