@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import SliderRow from '@/components/SliderRow'
 import { usePersistedState } from '@/hooks/usePersistedState'
+import AssocLabTabs from '@/components/assoc/AssocLabTabs'
 import ThinkBox from '@/components/ThinkBox'
 import {
   apriori,
@@ -182,6 +183,9 @@ export default function AssociationLab() {
         prunedSet={prunedSet}
         nTrans={transactions.length}
       />
+
+      {/* ========== 关联规则算法区（标签式：原理 / 逐步演示 / 性能对比） ========== */}
+      <AssocLabTabs transactions={transactions} />
 
       {/* ================= 数据 ================= */}
       <Card className="border-stone-200 shadow-sm">
