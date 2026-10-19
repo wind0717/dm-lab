@@ -1,4 +1,4 @@
-// 模块：数据预处理实验 —— 垃圾进，垃圾出
+// 模块：数据预处理实验 —— 把脏数据洗干净再送进模型
 // 左：原始数据表格 + 每列分布小图；中：流水线操作面板（可勾选、可排序）；右：处理后对比 + 送去分类
 import { useMemo, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -509,7 +509,7 @@ export default function PreprocessingLab({ onSendToClassification }: Props) {
   return (
     <div className="mx-auto max-w-[1440px] space-y-5 px-6 py-8">
       <div>
-        <h1 className="text-2xl font-bold text-stone-800">模块二 · 数据预处理：垃圾进，垃圾出</h1>
+        <h1 className="text-2xl font-bold text-stone-800">模块二 · 数据预处理：把脏数据洗干净再送进模型</h1>
         <p className="mt-1 text-sm text-stone-500">
           真实数据总是脏的：有缺失、有异常、量纲悬殊、还混着文字。左边看原始数据，中间像搭流水线一样叠加处理操作，右边实时对比处理前后的变化。
         </p>

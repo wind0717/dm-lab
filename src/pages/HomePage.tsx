@@ -30,7 +30,7 @@ const MODULES: Array<{
     id: 'prep',
     icon: Wrench,
     title: '模块二 · 数据预处理',
-    subtitle: '垃圾进，垃圾出',
+    subtitle: '脏数据进，干净数据出',
     desc: '缺失值、异常值、标准化、离散化、类别编码、SMOTE 过采样，搭流水线一样叠加操作，直方图和统计量实时前后对比，处理完一键送去分类。',
     accent: 'text-amber-600 bg-amber-50',
   },
