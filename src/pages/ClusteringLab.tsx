@@ -6,14 +6,17 @@ import KMeansLab from '@/pages/KMeansLab'
 import DbscanWalk from '@/pages/cluster/DbscanWalk'
 import HierWalk from '@/pages/cluster/HierWalk'
 import ClusterWorkbench from '@/pages/cluster/ClusterWorkbench'
+import Quiz from '@/components/Quiz'
+import { clusterQuiz } from '@/lib/quizzes'
 
-export type ClusterTab = 'kmeans' | 'dbscan' | 'hier' | 'workbench'
+export type ClusterTab = 'kmeans' | 'dbscan' | 'hier' | 'workbench' | 'quiz'
 
 const TABS: Array<{ id: ClusterTab; label: string }> = [
   { id: 'kmeans', label: 'K-Means 推演' },
   { id: 'dbscan', label: 'DBSCAN 推演' },
   { id: 'hier', label: '层次聚类推演' },
   { id: 'workbench', label: '多方法对比工作台' },
+  { id: 'quiz', label: '随堂测' },
 ]
 
 const VALID: ClusterTab[] = TABS.map((t) => t.id)
@@ -54,6 +57,11 @@ export default function ClusteringLab({ routeTab = 'kmeans' }: { routeTab?: Clus
       {tab === 'workbench' && (
         <div className="mx-auto max-w-6xl px-6 py-6">
           <ClusterWorkbench />
+        </div>
+      )}
+      {tab === 'quiz' && (
+        <div className="mx-auto max-w-4xl px-6 py-6">
+          <Quiz title="随堂测 · 聚类" subtitle="共 5 题 · 建议 7 分钟" questions={clusterQuiz} />
         </div>
       )}
     </div>

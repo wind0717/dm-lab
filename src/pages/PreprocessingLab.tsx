@@ -7,6 +7,8 @@ import { Checkbox } from '@/components/ui/checkbox'
 import SliderRow from '@/components/SliderRow'
 import ThinkBox from '@/components/ThinkBox'
 import CsvUpload from '@/components/CsvUpload'
+import Quiz from '@/components/Quiz'
+import { prepQuiz } from '@/lib/quizzes'
 import {
   genDirtyDataset,
   rowCount,
@@ -867,6 +869,13 @@ export default function PreprocessingLab({ onSendToClassification }: Props) {
           '把「用户评分」等宽分成 3 箱，再切成等频 3 箱：两种分法的边界有什么差别？哪种更适合右偏分布（比如销售额）？',
           'SMOTE 合成的新样本是"真数据"吗？如果少数类里混着标错的样本，SMOTE 会放大什么？',
         ]}
+      />
+
+      {/* ================= 随堂测（平时作业） ================= */}
+      <Quiz
+        title="随堂测 · 数据预处理"
+        subtitle="共 6 题 · 建议 8 分钟"
+        questions={prepQuiz}
       />
     </div>
   )

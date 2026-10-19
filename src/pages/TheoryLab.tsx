@@ -6,6 +6,8 @@ import MathBasics from '@/pages/theory/MathBasics'
 import InfoTheory from '@/pages/theory/InfoTheory'
 import GiniFamily from '@/pages/theory/GiniFamily'
 import ModelThinking from '@/pages/theory/ModelThinking'
+import Quiz from '@/components/Quiz'
+import { theoryQuiz } from '@/lib/quizzes'
 import type { PageId, TheoryTab } from '@/App'
 
 type TabId = TheoryTab
@@ -15,6 +17,7 @@ const TABS: Array<{ id: TabId; label: string }> = [
   { id: 'info', label: '信息论全家桶' },
   { id: 'gini', label: 'GINI 与不纯度家族' },
   { id: 'model', label: '模型思维实验室' },
+  { id: 'quiz', label: '随堂测' },
 ]
 
 const VALID: TabId[] = TABS.map((t) => t.id)
@@ -59,6 +62,7 @@ export default function TheoryLab({
         {tab === 'info' && <InfoTheory onNavigate={onNavigate} />}
         {tab === 'gini' && <GiniFamily onNavigate={onNavigate} />}
         {tab === 'model' && <ModelThinking onNavigate={onNavigate} />}
+        {tab === 'quiz' && <Quiz title="随堂测 · 理论基础" subtitle="共 6 题 · 建议 8 分钟" questions={theoryQuiz} />}
       </div>
     </div>
   )

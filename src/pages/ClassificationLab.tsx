@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button'
 import SliderRow from '@/components/SliderRow'
 import ThinkBox from '@/components/ThinkBox'
 import CsvUpload from '@/components/CsvUpload'
+import Quiz from '@/components/Quiz'
+import { classifyQuiz } from '@/lib/quizzes'
 import { usePersistedState } from '@/hooks/usePersistedState'
 import DecisionTreeLab from '@/pages/DecisionTreeLab'
 import LogisticWalk from '@/pages/walkthrough/LogisticWalk'
@@ -189,7 +191,7 @@ interface ClassificationLabProps {
   onNavigate?: (p: PageId, subTab?: string) => void
 }
 
-export type ClassSubTab = 'workbench' | 'dtree' | 'logreg' | 'knn' | 'nb' | 'svm' | 'rf' | 'xgb'
+export type ClassSubTab = 'workbench' | 'dtree' | 'logreg' | 'knn' | 'nb' | 'svm' | 'rf' | 'xgb' | 'quiz'
 
 const SUB_TABS: Array<[ClassSubTab, string]> = [
   ['workbench', '多方法对比工作台'],
@@ -200,6 +202,7 @@ const SUB_TABS: Array<[ClassSubTab, string]> = [
   ['svm', 'SVM 推演'],
   ['rf', '随机森林推演'],
   ['xgb', 'XGBoost 推演'],
+  ['quiz', '随堂测'],
 ]
 
 const VALID: ClassSubTab[] = SUB_TABS.map(([id]) => id)
@@ -241,6 +244,11 @@ export default function ClassificationLab({ injectedCsv, onInjectedConsumed, rou
       {subTab === 'svm' && <SvmWalk />}
       {subTab === 'rf' && <ForestWalk />}
       {subTab === 'xgb' && <XgbWalk />}
+      {subTab === 'quiz' && (
+        <div className="mx-auto max-w-4xl px-6 py-6">
+          <Quiz title="随堂测 · 分类" subtitle="共 5 题 · 建议 7 分钟" questions={classifyQuiz} />
+        </div>
+      )}
     </div>
   )
 }

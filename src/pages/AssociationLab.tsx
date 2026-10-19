@@ -10,6 +10,8 @@ import SliderRow from '@/components/SliderRow'
 import { usePersistedState } from '@/hooks/usePersistedState'
 import AssocLabTabs from '@/components/assoc/AssocLabTabs'
 import ThinkBox from '@/components/ThinkBox'
+import Quiz from '@/components/Quiz'
+import { assocQuiz } from '@/lib/quizzes'
 import {
   apriori,
   genRules,
@@ -186,6 +188,9 @@ export default function AssociationLab() {
 
       {/* ========== 关联规则算法区（标签式：原理 / 逐步演示 / 性能对比） ========== */}
       <AssocLabTabs transactions={transactions} />
+
+      {/* ================= 随堂测（平时作业） ================= */}
+      <Quiz title="随堂测 · 关联分析" subtitle="共 5 题 · 建议 7 分钟" questions={assocQuiz} />
 
       {/* ================= 数据 ================= */}
       <Card className="border-stone-200 shadow-sm">

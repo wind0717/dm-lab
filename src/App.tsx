@@ -35,7 +35,7 @@ function Loading() {
 }
 
 export type PageId = 'home' | 'theory' | 'prep' | 'tree' | 'cluster' | 'assoc'
-export type TheoryTab = 'math' | 'info' | 'gini' | 'model'
+export type TheoryTab = 'math' | 'info' | 'gini' | 'model' | 'quiz'
 
 /** 各主页面的默认落地路径（点顶部导航时用） */
 const DEFAULT_PATH: Record<PageId, string> = {
