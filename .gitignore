@@ -44,8 +44,13 @@ __pycache__/
 # 只能靠 gitignore 排除；这些文件没有保留价值）
 # 只排除「正好 8 位」或「8位+_后缀」的文件名，
 # 不能用 manim/*_[0-9a-z]* —— 那会误伤 build_all.py（源码里有下划线）
-manim/[0-9a-z][0-9a-z][0-9a-z][0-9a-z][0-9a-z][0-9a-z][0-9a-z][0-9a-z]
-manim/[0-9a-z][0-9a-z][0-9a-z][0-9a-z][0-9a-z][0-9a-z][0-9a-z][0-9a-z]_[0-9a-z]*
+# Manim 生成的随机名临时文件（如 am7ijg_f、7d751xb_、pszi5ze_）。
+# 形态是「以字母数字开头且含下划线」，与源码 build_all.py 同形，
+# 所以用宽规则排除后，再显式把真正的源码捞回来。
+manim/[0-9a-z]*_*
+!manim/build_all.py
+!manim/render.py
+!manim/manimenv.py
 
 # git 安全提交脚本产生的临时索引与清单
 .gitidx-*
