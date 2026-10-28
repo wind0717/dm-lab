@@ -19,6 +19,10 @@ export default defineConfig({
     },
   },
   build: {
+    // 本机环境的「安全删除代理」在清空 dist 时会卡住（state lock timeout），
+    // 表现为 vite:prepare-out-dir 报错。改成不清空 —— 旧文件残留由
+    // npm run clean 脚本处理，不影响构建正确性。
+    emptyOutDir: false,
     // vendor 拆分：react 核心、图表库、UI 组件分开，便于浏览器并行下载与长期缓存
     rollupOptions: {
       output: {

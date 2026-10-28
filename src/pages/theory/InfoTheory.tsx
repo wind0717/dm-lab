@@ -5,6 +5,8 @@ import { useMemo, useRef, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import ThinkBox from '@/components/ThinkBox'
+import ManimDemo from '@/components/ManimDemo'
+import { infoTheoryClips } from '@/lib/animClips'
 import CurveChart from '@/components/CurveChart'
 import { BallSection, SplitSection } from '@/pages/EntropyLab'
 import { entropyOfCounts } from '@/lib/entropy'
@@ -603,6 +605,13 @@ export default function InfoTheory({ onNavigate }: { onNavigate?: (p: PageId, su
           从"摸球"建立熵的直觉，一路走到互信息、KL 散度与增益率——决策树和逻辑回归的数学引擎都在这里。
         </p>
       </div>
+      {/* 动画演示：默认折叠，学生按需展开 —— 原理讲解与交互实验互补 */}
+      <ManimDemo
+        title="信息论动画演示"
+        clips={infoTheoryClips}
+        goFurther={onNavigate ? { label: '去决策树看信息增益怎么用', onClick: () => onNavigate('tree', 'dtree') } : undefined}
+      />
+
       <BallSection num="1" />
       <SplitSection num="2" />
       <WeatherModule num1="3" num2="4" />

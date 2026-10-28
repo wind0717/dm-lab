@@ -6,6 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import SliderRow from '@/components/SliderRow'
 import ThinkBox from '@/components/ThinkBox'
+import ManimDemo from '@/components/ManimDemo'
+import { mathBasicsClips } from '@/lib/animClips'
 import CurveChart from '@/components/CurveChart'
 import { Dices, RotateCcw, ArrowRight } from 'lucide-react'
 import { bayesPosterior, bayesGrid, genCovPreset, covariance, pearson, linearFit, type CovPreset, type Pt } from '@/lib/theoryMath'
@@ -1138,6 +1140,13 @@ export default function MathBasics({ onNavigate }: { onNavigate?: Nav }) {
         <b className="text-stone-700">④ 矩阵 = 表格</b> → 所有模块共同的地基；<b className="text-stone-700">⑤ 贝叶斯定理</b> → 朴素贝叶斯分类器（分类实验）；
         <b className="text-stone-700">⑥ 协方差与相关</b> → 异常值预处理与特征选择（数据预处理）。
       </p>
+      {/* 动画演示：默认折叠，学生按需展开 */}
+      <ManimDemo
+        title="数学基础动画演示"
+        clips={mathBasicsClips}
+        goFurther={onNavigate ? { label: '去分类实验动手试 kNN', onClick: () => onNavigate('tree', 'knn') } : undefined}
+      />
+
       <div>
         <h2 className="text-lg font-bold text-stone-800">① 概率与统计直觉</h2>
         <p className="mt-0.5 text-sm text-stone-500">不懂概率，后面的熵和贝叶斯都是空中楼阁。三个小实验把"随机"变成看得见的曲线。</p>

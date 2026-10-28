@@ -30,3 +30,21 @@ audit-shots/
 # 远端部署验证脚本（可能含内网地址与凭据，不入库）
 scripts/_ssh_*.py
 scripts/_scp_*.py
+
+# ---- Manim 渲染中间产物 ----
+# 这些是渲染过程的缓存与分片文件，不入库。
+# 注意：public/media/*.mp4 是**成品**，要入库并随站点发布，故不忽略。
+manim/media/
+manim/.manimtmp/
+.manimtmp/
+__pycache__/
+*.pyc
+
+# Manim 在工作目录生成的随机名临时文件（本机删除被安全代理拦截，
+# 只能靠 gitignore 排除；这些文件没有保留价值）
+manim/[0-9a-z][0-9a-z][0-9a-z][0-9a-z][0-9a-z][0-9a-z][0-9a-z][0-9a-z]
+manim/[0-9a-z]*_[0-9a-z]*
+
+# git 安全提交脚本产生的临时索引与清单
+.gitidx-*
+.git-idx-*

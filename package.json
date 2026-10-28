@@ -10,9 +10,13 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
     "lint": "eslint .",
     "test": "vitest run",
     "test:watch": "vitest",
+    "anim:build": "python3 manim/build_all.py",
+    "anim:fast": "python3 manim/build_all.py --fast",
+    "anim:list": "python3 manim/build_all.py --list",
     "selftest": "node scripts/selftest-datasets.mjs && node scripts/selftest-persist.mjs",
     "audit": "node scripts/audit.mjs",
     "preview": "vite preview"
