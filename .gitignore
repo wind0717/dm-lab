@@ -65,6 +65,7 @@ manim/[0-9a-z]*_*
 _probe_test.tmp
 _rn_test
 _t.mjs
+_online.mjs
 _audit.mjs
 _shots.mjs
 *.tmp
